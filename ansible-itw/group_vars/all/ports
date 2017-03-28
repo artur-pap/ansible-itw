@@ -1,0 +1,52 @@
+---
+kafka_port: 9092
+kafka_http_proxy_port: 8082
+kafka_jmx_port: 9900
+zookeeper_client_port: 2181
+zookeeper_port: 2888
+zookeeper_intra_port: 3888
+zookeeper_jmx_port: 9901
+elasticsearch_http_port: 9200
+elasticsearch_transport_port: 9300
+mesos_master_port: 5040
+mesos_slave_port: 5051
+#flume_port: 5061
+kibana_port: 5601
+docker_registry_port: 5000
+docker_proxy_port: 5001
+marathon_ui_port: 7080
+artifactory_ui_port: 8081
+jenkins_ui_port: 9080
+jenkins_intercom_port: 19080
+
+nrpe_tcp_port: 5666
+kafka_ingester_port: 5050
+
+proxy_kafka_http_proxy_port: 18082
+proxy_flume_port: 15061
+proxy_kafka_ingester_port: 15050
+proxy_elasticsearch_http_port: 19200
+
+kafka_ingester_jmx_port: 8000
+kafka_ingester_profiling_port: 9000
+
+statsd_port: 8125
+
+logstash_log4j_port: 4560
+
+hdfs_namenode_rpc_port: 9820
+hdfs_namenode_http_port: 9870
+hdfs_namenode_https_port: 9871
+
+hdfs_journalnode_rpc_port: 8485
+hdfs_journalnode_http_port: 8480
+hdfs_journalnode_https_port: 8481
+
+hdfs_datanode_data_transfer_port: 9866
+hdfs_datanode_http_port: 9864
+hdfs_datanode_https_port: 9865
+hdfs_datanode_ipc_port: 9867
+
+kafka_connect_rest_port: 8083
+
+apache_rp_port: 80

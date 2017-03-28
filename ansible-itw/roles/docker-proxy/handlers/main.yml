@@ -1,0 +1,3 @@
+---
+- name: restart docker-proxy
+  set_fact: docker_proxy_restart_docker=yes

@@ -1,0 +1,78 @@
+---
+- name: set facts for kafka-connect
+  set_fact: kafka_connect_host_dir=/srv/services/kafka-connect
+
+- name: create directories for kafka-connect
+  file: path="{{ item }}" state=directory
+  with_items:
+    - "{{ kafka_connect_dir }}"
+
+- name: create a symbolic link for kafka-connect
+  file: src="{{ kafka_connect_dir }}" dest="{{ kafka_connect_host_dir }}" state=link force=yes
+
+- name: create directory to store jars
+  file: path="{{ kafka_connect_host_dir }}/jars" state=directory mode=0755
+
+- name: download elasticsearch plugin for kafka connect
+  get_url:
+    url: "http://{{ hostvars[groups['artifactory'][0]].net_internal_ip }}:8081/artifactory/libs-release-local/io/confluent/kafka-connect-elasticsearch/3.1.2/kafka-connect-elasticsearch-3.1.2.jar"
+    dest: "{{ kafka_connect_host_dir }}/jars/"
+    mode: 0644
+
+- name: set environment variables
+  template: src=templates/environment.conf.j2 dest="{{ kafka_connect_host_dir }}/environment.conf"
+  notify: restart kafka-connect
+
+#
+# Create Kafka topics
+#
+- name: list existing kafka topics
+  command: docker exec kafka bash -c "unset JMX_PORT;/usr/bin/kafka-topics --zookeeper {{ hostvars[groups['zookeeper'][0]].net_internal_ip }}:{{ zookeeper_client_port }}/kafka --list"
+  register: kafka_topic_list
+
+- name: print topic list
+  debug:
+    msg: "Kafka_topic_list: {{ kafka_topic_list }}"
+
+# Unfortunately there is quite a delay between listing the topics and creating them, so we have to ignore errors
+- name: create kafka-connect topics
+  command: docker exec kafka bash -c "unset JMX_PORT;/usr/bin/kafka-topics --zookeeper {{ hostvars[groups['zookeeper'][0]].net_internal_ip }}:{{ zookeeper_client_port }}/kafka --create --partitions {{ kafka_connect_no_of_partitions }} --replication-factor {{ kafka_connect_replication_factor }} --topic {{ item }}"
+  ignore_errors: yes
+  with_items:
+    - kafka-connect-config30
+    - kakfa-connect-offset30
+    - kafka-connect-status30
+  when: kafka_topic_list.stdout.find(item) == -1
+
+- meta: flush_handlers
+
+- name: add container to whitelist
+  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'kafka-connect' ]"
+  tags: always
+
+- name: start kafka-connect
+  docker_container:
+    name: "kafka-connect"
+    state: started
+    restart_policy: unless-stopped
+    image: "confluentinc/cp-kafka-connect:3.2.0-1"
+    recreate: "{{ kafka_connect_restart_docker|default('no') }}"
+    volumes:
+     - "{{ kafka_connect_host_dir }}/jars:/etc/kafka-connect/jars:ro"
+    network_mode: host
+    log_driver: json-file
+    env:
+      CONNECT_BOOTSTRAP_SERVERS: "localhost:{{ kafka_port }}"
+      CONNECT_REST_PORT: "{{ kafka_connect_rest_port }}"
+      CONNECT_GROUP_ID: "kafka-connect-odh30"
+      CONNECT_CONFIG_STORAGE_TOPIC: "kafka-connect-config30"
+      CONNECT_OFFSET_STORAGE_TOPIC: "kakfa-connect-offset30"
+      CONNECT_STATUS_STORAGE_TOPIC: "kafka-connect-status30"
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "{{ ansible_hostname }}"
+

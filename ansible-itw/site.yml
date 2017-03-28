@@ -1,0 +1,261 @@
+---
+- include: check.yml
+
+- name: define a container whitelist
+  hosts: all
+  tasks:
+    - set_fact: docker_containers_whitelist=[]
+      tags: always
+
+- hosts: all-servers
+  strategy: free
+  roles:
+    - name: yum
+      tags: base
+    - name: base
+      tags: base
+    - name: users
+      tags: base
+    - name: nscd
+      tags: base
+    - name: ntpd
+      tags: base
+    - name: docker
+      tags: [base, docker]
+    - name: rsyslog
+      tags: base
+    - name: logrotate
+      tags: [base, logrotate]
+  environment: "{{ proxy_environment }}"
+
+- hosts: docker-registry
+  roles:
+    - name: docker-proxy
+      tags: [docker-proxy, docker]
+
+- hosts: docker-registry
+  roles:
+    - name: docker-registry
+      tags: [docker-registry, docker]
+
+# ES Master nodes
+- hosts: elastic_master_node
+  roles:
+    - name: elasticsearch
+      vars:
+        - is_master: true
+        - is_data: false
+        - nodecount: 1
+      tags: [elasticsearch,es-master-node]
+
+# ES Data nodes
+- hosts: elastic_data_node
+  roles:
+    - name: elasticsearch
+      vars:
+        - is_master: false
+        - is_data: true
+        - nodecount: 4
+      tags: [elasticsearch,es-data-node]
+
+# ES Client nodes
+- hosts: elastic_client_node
+  roles:
+    - name: elasticsearch
+      vars:
+        - is_master: false
+        - is_data: false
+        - nodecount: 1
+      tags: [elasticsearch,es-client-node]
+
+- hosts: zookeeper
+  serial: 1
+  roles:
+    - name: zookeeper
+      tags: zookeeper
+
+- hosts: kafka
+  serial: 1
+  roles:
+    - name: kafka
+      tags: kafka
+
+- hosts: kafka-ingester
+  serial: 1
+  roles:
+    - name: kafka-ingester
+      tags: kafka-ingester
+
+- hosts: haproxy
+  serial: 35%
+  strategy: free
+  roles:
+    - name: haproxy
+      tags: haproxy
+
+- hosts: collectd
+  roles:
+    - name: collectd
+      tags: collectd
+
+- hosts: es2graphite
+  roles:
+    - name: es2graphite
+      tags: es2graphite
+
+- hosts: capacityplanning-frontend
+  roles:
+    - name: capacityplanning-frontend
+      tags: capacityplanning-frontend
+
+- hosts: statsd
+  roles:
+    - name: statsd
+      tags: statsd
+
+- hosts: jmxtrans
+  roles:
+    - name: jmxtrans
+      tags: jmxtrans
+
+- hosts: artifactory
+  serial: 1
+  roles:
+    - name: artifactory
+      tags: artifactory
+
+- hosts: kafka
+  serial: 1
+  roles:
+    - name: kafka-mirrormaker
+      tags: kafka-mirrormaker
+
+- hosts: cassandra
+  serial: 1
+  vars:
+    - cassandra_dc: "lgi_dc1"
+    - cassandra_rack: "rack7"
+    - cassandra_cluster_name: "odh_cassandra"
+  roles:
+    - name: cassandra
+      tags: cassandra
+
+- hosts: kafka-connect
+  serial: 1
+  roles:
+    - name: kafka-connect
+      tags: kafka-connect
+
+- hosts: admin-tasks
+  roles:
+    - name: elasticsearch-curator
+      tags: [elasticsearch,elasticsearch-curator]
+    - name: kafka-connect-config
+      tags: kafka-connect-config
+
+- hosts: all-servers
+  serial: 1
+  roles:
+    - name: hdfs
+      tags: hdfs
+
+- hosts: kibana
+  serial: 1
+  roles:
+    - name: kibana
+      tags: kibana
+
+- hosts: apache-rp
+  serial: 1
+  roles:
+    - name: apache-rp
+      tags: apache-rp
+
+- hosts: all-servers
+  strategy: free
+  roles:
+    - name: spark
+      tags: spark
+
+- hosts: mesos-master
+  serial: 1
+  strategy: free
+  roles:
+    - name: mesos-master
+      tags:
+        - mesos
+        - mesos-master
+
+- hosts: mesos-slave
+  serial: 1
+  strategy: free
+  roles:
+    - name: mesos-slave
+      tags:
+        - mesos
+        - mesos-slave
+
+- hosts: marathon
+  serial: 1
+  roles:
+    - name: marathon
+      tags:
+        - marathon
+
+- hosts: chronos
+  serial: 1
+  roles:
+    - name: chronos
+      tags: chronos
+
+- hosts: zeppelin
+  strategy: free
+  roles:
+    - name: zeppelin
+      tags: zeppelin
+
+- hosts: kafka-http-proxy
+  serial: 1
+  roles:
+    - name: kafka-http-proxy
+      tags: kafka-http-proxy
+
+- hosts: flume
+  serial: 1
+  roles:
+    - name: flume
+      tags: flume
+
+- hosts: logstash
+  serial: 1
+  roles:
+    - name: logstash
+      tags: logstash
+
+- hosts: logstash-mapng
+  serial: 1
+  roles:
+    - name: logstash-mapng
+      tags: logstash-mapng
+
+- hosts: jenkins
+  roles:
+    - name: jenkins
+      tags: jenkins
+
+- name: dump whitelist
+  hosts: all-servers
+  tasks:
+    - name: get a list of running containers
+      shell: "{% raw %}docker ps --format '{{.Names}}' | grep -v 'mesos-'{% endraw %}"
+      register: running_containers
+      tags: always
+      changed_when: false
+    - name: compute a list of stray containers
+      set_fact:
+        stray_containers: "{{ running_containers.stdout_lines|difference(docker_containers_whitelist) }}"
+      tags: always
+    - debug:
+        msg: "ssh {{ hostname }} docker stop {{ stray_containers|join(' ') }}"
+      when: stray_containers|length > 0
+      tags: always

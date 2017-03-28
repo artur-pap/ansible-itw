@@ -1,0 +1,6 @@
+---
+- name: update kafka-connect-connectors
+  set_fact: kafka_connect_update_connectors=true
+
+- name: reinitialize elasticsearch alias
+  command: "/usr/local/bin/rotate_alias.sh"

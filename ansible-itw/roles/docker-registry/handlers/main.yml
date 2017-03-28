@@ -1,0 +1,3 @@
+---
+- name: restart docker-registry
+  set_fact: docker_registry_restart_docker=yes

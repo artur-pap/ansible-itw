@@ -1,0 +1,9 @@
+# TODO: remove this file after upgrade to spark 2.2
+127.0.0.1   dl.bintray.com www.ibiblio.org repo1.maven.org
+
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+{% for host in groups['all'] %}
+{{ hostvars[host].net_internal_ip }} {{ hostvars[host].hostname }}
+{% endfor %}

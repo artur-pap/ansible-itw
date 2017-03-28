@@ -1,0 +1,71 @@
+Comment this line out if you really want to run it
+- name: Clear cluster
+  hosts: all-servers
+  strategy: free
+
+  tasks:
+  - name: Stop kafka proxy
+    docker_container:
+      name: kafka-http-proxy
+      state: absent
+
+  - name: Stop kafka
+    docker_container:
+      name: kafka
+      state: absent
+
+  - name: Stop processor
+    docker_container:
+      name: processor
+      state: absent
+
+  - name: Stop logstash
+    docker_container:
+      name: logstash
+      state: absent
+
+  - name: Stop elasticsearch
+    docker_container:
+      name: elasticsearch
+      state: absent
+
+  - name: Stop zookeeper
+    docker_container:
+      name: zookeeper
+      state: absent
+
+  - name: Stop kibana
+    docker_container:
+      name: kibana
+      state: absent
+
+  - name: Stop mesos-master
+    docker_container:
+      name: master-mesos
+      state: absent
+
+  - name: Stop mesos-slave
+    docker_container:
+      name: slave-mesos
+      state: absent
+
+
+  - name: cleartemp1
+    file: path=/u01/odh/data/kafka state=absent
+  - name: cleartemp2
+    file: path=/u02/odh/data/kafka state=absent
+  - name: cleartemp3
+    file: path=/u03/odh/data/kafka state=absent
+  - name: cleartemp4
+    file: path=/u04/odh/data/kafka state=absent
+  - name: fcleartemp1
+    file: path=/u01/odh/data/zookeeper state=absent
+  - name: fcleartemp2
+    file: path=/u02/odh/data/zookeeper state=absent
+  - name: fcleartemp3
+    file: path=/u03/odh/data/zookeeper state=absent
+  - name: fcleartemp4
+    file: path=/u04/odh/data/zookeeper state=absent
+
+  post_tasks:
+   - debug: msg="Ending task" verbosity=3

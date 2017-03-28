@@ -1,0 +1,9 @@
+---
+zookeeper_id: 2
+kafka_broker_id: 2
+elastic_nodename: test2
+
+net_internal_ip: 192.168.120.12
+hostname: test2
+
+elastic_heap_size: 256m

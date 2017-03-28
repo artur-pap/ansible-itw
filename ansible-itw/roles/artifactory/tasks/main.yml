@@ -1,0 +1,43 @@
+# https://www.jfrog.com/confluence/display/RTF/Running+Artifactory+OSS
+---
+- name: Set artifactory host dir
+  set_fact: artifactory_host_dir=/srv/services/artifactory
+
+- name: Ensure artifactory directories are present
+  file: path="{{ item }}" state=directory
+  with_items:
+    - "{{ artifactory_host_dir }}"
+    - "{{ artifactory_data_dir }}"
+    - "{{ artifactory_log_dir }}"
+    - "{{ artifactory_etc_dir }}"
+    - "{{ artifactory_backup_dir }}"
+
+- name: Ensure artifactory directory data is linked
+  file: src="{{ artifactory_data_dir }}" dest="{{ artifactory_host_dir }}/data" state=link force=yes
+
+- name: Ensure artifactory directory log is linked
+  file: src="{{ artifactory_log_dir }}"  dest="{{ artifactory_host_dir }}/log"  state=link force=yes
+
+- name: Ensure artifactory directory etc is linked
+  file: src="{{ artifactory_etc_dir }}"  dest="{{ artifactory_host_dir }}/etc"  state=link force=yes
+
+- name: Ensure artifactory directory backup is linked
+  file: src="{{ artifactory_backup_dir }}"  dest="{{ artifactory_host_dir }}/backup"  state=link force=yes
+
+- name: add container to whitelist
+  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'artifactory' ]"
+  tags: always
+
+- name: start artifactory
+  docker_container:
+    name: artifactory
+    state: started
+    image: docker.bintray.io/jfrog/artifactory-oss:4.14.1
+    restart_policy: unless-stopped
+    network_mode: host
+    log_driver: json-file
+    volumes:
+      - "{{ artifactory_host_dir }}/data:/var/opt/jfrog/artifactory/data"
+      - "{{ artifactory_host_dir }}/log:/var/opt/jfrog/artifactory/logs"
+      - "{{ artifactory_host_dir }}/etc:/var/opt/jfrog/artifactory/etc"
+      - "{{ artifactory_host_dir }}/backup:/var/opt/jfrog/artifactory/backup"

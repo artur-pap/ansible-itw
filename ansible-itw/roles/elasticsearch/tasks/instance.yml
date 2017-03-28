@@ -1,0 +1,58 @@
+---
+- name: set facts for elasticsearch
+  set_fact:
+    es_node_dir: "{{ node_name_template }}/{{ outer_item }}"
+    es_host_node_dir: "{{ elasticsearch_host_dir }}/{{ node_name_template }}/{{ outer_item }}"
+    elasticsearch_restart_docker: no
+
+- name: set container name for elasticsearch
+  set_fact:
+    es_container_name: "{{ node_name_template }}_{{ outer_item }}"
+  tags: always
+
+- name: base layout modes
+  file: path="{{ item }}" state=directory mode=0755 owner=1000 group=1000
+  with_items:
+    - "{{ es_host_node_dir }}"
+    - "{{ elasticsearch_data_dirs[outer_item | int].disk }}/{{ es_node_dir }}/data"
+    - "{{ elasticsearch_data_dirs[outer_item | int].disk }}/{{ es_node_dir }}/conf"
+    - "{{ elasticsearch_data_dirs[outer_item | int].disk }}/{{ es_node_dir }}/log"
+
+- name: data layout link
+  file: src="{{ elasticsearch_data_dirs[outer_item | int].disk }}/{{ es_node_dir }}/data" dest="{{ es_host_node_dir }}/data" state=link force=yes
+
+- name: config link
+  file: src="{{ elasticsearch_data_dirs[outer_item | int].disk }}/{{ es_node_dir }}/conf" dest="{{ es_host_node_dir }}/conf" state=link force=yes
+
+- name: log link
+  file: src="{{ elasticsearch_data_dirs[outer_item | int].disk }}/{{ es_node_dir }}/log" dest="{{ es_host_node_dir }}/log" state=link force=yes
+
+- name: copy configuration
+  template: src={{ item }}.j2 dest="{{ es_host_node_dir }}/conf/{{ item }}" force=yes
+  with_items:
+    - elasticsearch.yml
+    - logging.yml
+  notify: restart elasticsearch node
+
+- meta: flush_handlers
+
+- name: add container to whitelist
+  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ es_container_name ]"
+  tags: always
+
+- name: start elasticsearch
+  docker_container:
+    name: "{{ es_container_name }}"
+    state: started
+    restart_policy: unless-stopped
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.2.2
+    recreate: "{{ elasticsearch_restart_docker }}"
+    network_mode: host
+    log_driver: json-file
+    volumes:
+      - "{{ es_host_node_dir }}/conf/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
+      - "{{ es_host_node_dir }}/conf/logging.yml:/usr/share/elasticsearch/config/logging.yml"
+      - "{{ es_host_node_dir }}/data:/data"
+      - "{{ es_host_node_dir }}/log:/log"
+    env:
+      ES_JAVA_OPTS: "-Xms{{ elastic_heap_size }} -Xmx{{ elastic_heap_size }}"

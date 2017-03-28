@@ -1,0 +1,53 @@
+---
+- name: set facts for docker_registry
+  set_fact: docker_registry_host_dir=/srv/services/docker-registry
+
+- name: create docker_registry directorys
+  file: path={{ docker_registry_host_dir }} state=directory
+
+- name: check if docker_registry_old_data_dir excists
+  stat: path="{{ docker_registry_old_data_dir }}"
+  register: docker_registry_old_data_dir_stat
+
+- name: create docker_registry_old_data_dir when previous check failed
+  file: path="{{ docker_registry_data_dir }}/.." state=directory
+  when: docker_registry_old_data_dir_stat.stat.exists
+
+- name: move registry data dir from old location
+  command: mv {{ docker_registry_old_data_dir }} {{ docker_registry_data_dir }}
+  when: docker_registry_old_data_dir_stat.stat.exists
+
+- name: create docker_registry data and conf directory
+  file: path={{ item }} state=directory
+  with_items:
+    - "{{ docker_registry_data_dir }}"
+    - "{{ docker_registry_conf_dir }}"
+
+- name: create symbolic link for docker_registry data directory
+  file: src="{{ docker_registry_data_dir }}" dest="{{ docker_registry_host_dir }}/data" state=link force=yes
+
+- name: create symbolic link for docker_registry conf directory
+  file: src="{{ docker_registry_conf_dir }}" dest="{{ docker_registry_host_dir }}/conf" state=link force=yes
+
+- name: create docker_registry configuration file
+  template: src=config.yml.j2 dest="{{ docker_registry_host_dir }}/conf/config.yml"
+  notify: restart docker-registry
+
+- meta: flush_handlers
+
+- name: add container to whitelist
+  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'docker-registry' ]"
+  tags: always
+
+- name: start docker_registry container
+  docker_container:
+    name: docker-registry
+    state: started
+    image: registry:2.5.1
+    restart_policy: unless-stopped
+    recreate: "{{ docker_registry_restart_docker|default('no') }}"
+    network_mode: host
+    log_driver: json-file
+    volumes:
+      - "{{ docker_registry_host_dir }}/data:/var/lib/registry"
+      - "{{ docker_registry_host_dir }}/conf:/etc/docker/registry"

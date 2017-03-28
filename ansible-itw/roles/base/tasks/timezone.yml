@@ -1,0 +1,13 @@
+---
+- name: Check Operating System (timezone settings are distro dependant)
+  fail:
+    msg="You're not running a supported operating system (CentOS or RHEL 7+)"
+  when: ((ansible_os_family != "RedHat") or (ansible_distribution_major_version|int < 6))
+
+- name: Set timezone
+  file:
+    src: /usr/share/zoneinfo/UTC
+    dest: /etc/localtime
+    owner: root
+    group: root
+    state: link

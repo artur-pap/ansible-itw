@@ -1,0 +1,23 @@
+---
+
+- name: Install the alias rotation script
+  template: src=templates/rotate_alias.sh.j2 dest=/usr/local/bin/rotate_alias.sh mode=0744
+  notify: reinitialize elasticsearch alias
+
+- name: Index mapping setup scripts
+  template: src=templates/{{ item }}.j2 dest=/usr/local/bin/{{ item }} mode=0744
+  with_items:
+    - create_index_out-hrzdtv-mapng-nginx-logstash-raw.sh
+
+# We're setting the cron job at 01:00 because otherwise the script might run at
+# 23:59 and calculate the wrong dates. This doesn't matter much because Kibana 
+# doesn't care anyways and developers should take into account that documents 
+# will not be stored in the correctly dated index anyways.
+# This will also prevent errors when the script is run during the day.
+- name: setup rotate alias cron job
+  cron:
+    name: "Elasticsearch Rotate Alias"
+    minute: "30"
+    hour: "0"
+    job: "/usr/local/bin/rotate_alias.sh"
+

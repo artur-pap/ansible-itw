@@ -1,0 +1,7 @@
+*.retry
+**/.idea
+*.iml
+*.swp
+gatling-results/
+.vagrant/*
+misc/nagios-production-config/*

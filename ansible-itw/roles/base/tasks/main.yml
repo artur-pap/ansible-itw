@@ -1,0 +1,9 @@
+---
+- include: common-packages.yml
+#- include: basic-firewall.yml
+#- include: storage.yml
+- include: sysctl.yml
+- include: sshd.yml
+#- include: users.yml
+- include: network.yml
+- include: timezone.yml

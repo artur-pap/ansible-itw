@@ -1,0 +1,3 @@
+---
+- name: restart elasticsearch node
+  set_fact: elasticsearch_restart_docker=yes

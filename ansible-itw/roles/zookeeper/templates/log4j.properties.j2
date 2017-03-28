@@ -1,0 +1,8 @@
+log4j.rootLogger=INFO, main
+
+log4j.appender.main=org.apache.log4j.RollingFileAppender
+log4j.appender.main.file=/log/main.log
+log4j.appender.main.maxBackupIndex=5
+log4j.appender.main.maxFileSize=50MB
+log4j.appender.main.layout=org.apache.log4j.EnhancedPatternLayout
+log4j.appender.main.layout.ConversionPattern=[[[MSG]]] [%d{ISO8601}] [%p] [logger:%c] [thread:%t] [mdc:%X] %m %throwable%n

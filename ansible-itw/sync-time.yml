@@ -1,0 +1,11 @@
+---
+- include: check.yml
+
+- hosts: all-servers:!admin-tasks
+  strategy: free
+  tasks:
+    - service: name=ntpd state=stopped
+
+    - command: ntpdate -s {{ hostvars[groups['admin-tasks'][0]].net_internal_ip }}
+
+    - service: name=ntpd state=started

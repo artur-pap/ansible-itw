@@ -1,0 +1,32 @@
+---
+- name: set facts for marathon
+  set_fact: marathon_host_dir=/srv/services/marathon
+
+- name: create directories for marathon
+  file: path="{{ item }}" state=directory
+  with_items:
+    - "{{ marathon_host_dir }}"
+    - "{{ marathon_tmp_dir }}/tmp"
+
+- name: create a symbolic link for marathon conf directory
+  file: src="{{ marathon_tmp_dir }}" dest="{{ marathon_host_dir }}/conf" state=link force=yes
+
+- name: add container to whitelist
+  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'marathon' ]"
+  tags: always
+
+- name: start marathon
+  vars:
+    volumes:
+      - "{{ marathon_host_dir }}/tmp:/tmp"
+  docker_container:
+    name: marathon
+    state: started
+    restart_policy: unless-stopped
+    image: mesosphere/marathon:v1.3.6
+    network_mode: host
+    log_driver: json-file
+    command: "--master zk://{{ zookeeper_hosts }}/mesos --zk zk://{{ zookeeper_hosts }}/marathon --http_port {{ marathon_ui_port }}"
+    published_ports:
+      - "{{ marathon_ui_port }}:{{ marathon_ui_port }}"
+    volumes: "{{ volumes }}"

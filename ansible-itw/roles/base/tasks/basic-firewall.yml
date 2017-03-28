@@ -1,0 +1,21 @@
+---
+- apt: name=ufw state=absent
+
+- apt: name=ferm state=present
+
+- file: path=/etc/ferm/{{ item }} state=directory
+  with_items:
+    - input.d
+    - output.d
+    - forward.d
+    - nat-prerouting.d
+    - nat-output.d
+    - nat-postrouting.d
+
+- template: src=ferm/ferm.conf.j2 dest=/etc/ferm/ferm.conf
+  tags: [net, ferm]
+  notify: reload ferm
+
+- service: name=ferm state=started
+
+- meta: flush_handlers

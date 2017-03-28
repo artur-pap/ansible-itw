@@ -1,0 +1,5 @@
+---
+- file: path=/data state=directory
+
+- lineinfile: dest=/etc/fstab regexp=\s/data\s line={{ fstab.data }}
+  notify: remount

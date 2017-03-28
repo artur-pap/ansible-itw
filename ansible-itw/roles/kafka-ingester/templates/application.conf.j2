@@ -1,0 +1,63 @@
+ingester {
+  kafka {
+    topic = "test-ingester"
+    dlq = "test-ingester-dlq"
+
+    producer {
+      parallelism = 64
+      close-timeout = 20s
+      kafka-clients {
+        bootstrap.servers = "{{ kafka_hosts }}"
+        compression.type = "gzip"
+        acks = 0
+        linger.ms = 100
+        retries = 2
+        max.in.flight.requests.per.connection = 64
+      }
+    }
+  }
+  http {
+    host = "0.0.0.0"
+    port = {{ kafka_ingester_port }}
+    entity-fetch-parallelism = 2
+    entity-fetch-timeout = 30 seconds
+  }
+  udp {
+    host = "0.0.0.0"
+    port = {{ kafka_ingester_port }}
+    buffer-size = 512
+  }
+}
+
+akka {
+  kafka {
+    default-dispatcher {
+      thread-pool-executor {
+        fixed-pool-size = 32
+      }
+    }
+  }
+
+  http.server {
+    server-header = ""
+    transparent-head-requests = off
+  }
+}
+
+kamon {
+  metric.filters {
+    akka-dispatcher {
+      includes = [ "**" ]
+    }
+
+    akka-router {
+      includes = [ "**" ]
+    }
+  }
+  kamon-mxbeans {
+    mbeans = []
+    identify-delay-interval-ms = 1000
+    identify-interval-ms = 1000
+    value-check-interval-ms = 1000
+  }
+}

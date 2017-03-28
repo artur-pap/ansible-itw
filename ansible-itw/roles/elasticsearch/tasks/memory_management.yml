@@ -1,0 +1,6 @@
+---
+- name: change system limits
+  pam_limits: domain=elasticsearch limit_item="{{ item.limit_item }}" value="{{ item.value }}" limit_type=-
+  with_items:
+    - { limit_item: memlock, value: unlimited } # unlimited
+    - { limit_item: nofile,  value: 131071 } # 65535

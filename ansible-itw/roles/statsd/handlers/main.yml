@@ -1,0 +1,3 @@
+---
+- name: restart statsd
+  set_fact: statsd_restart_docker=yes

@@ -1,0 +1,74 @@
+#!/bin/bash
+
+elasticMaster="{{ hostvars[groups['elastic_master_node'][0]].net_internal_ip }}:{{ elasticsearch_http_port }}"
+logFile="/var/log/rotate_alias.log"
+exec >> "$logFile" 2>&1
+
+aliasIndices=({% for item in kafka_connect_topic_index_map %}{{ item.es_index }} {% endfor %})
+
+today=$(date '+%Y.%m.%d')
+yesterday=$(date --date='yesterday' '+%Y.%m.%d')
+
+log() {
+  logMessage=$1
+  logTime=$(date --iso-8601=seconds)
+
+  IFS=$'\n'
+  echo "$logMessage" | while read line
+  do
+    echo "${logTime}: ${line}"
+  done
+}
+
+for index in "${aliasIndices[@]}"
+do
+  log "Creating new index $index"
+  # Look for a specific index creation script, if it doesn't exist, use default mappings
+  # The script should take a single parameter, the index to be created
+  if [[ -r "/usr/local/bin/create_index_${index}.sh" ]]; then
+    /usr/local/bin/create_index_${index}.sh "$index-${today}"
+  else
+    curl -s -XPUT "http://${elasticMaster}/${index}-${today}?pretty" -H 'Content-Type: application/json' -d'
+      {
+          "settings" : {
+              "index" : {
+                  "number_of_shards" : 12, 
+                  "number_of_replicas" : 1 
+              }
+          }
+      }'
+  fi
+
+  log "Check if yesterday's index exists and if not, do not remove the previous alias"
+  rawCurlOut=$(curl -s -XGET "http://${elasticMaster}/${index}-${yesterday}")
+  if echo "$rawCurlOut" | grep -q index_not_found_exception; then
+    log "Yesterdays index does not exist"
+    cat <<EOF >/tmp/index_rotate_data.tmp
+{
+    "actions" : [
+        { "add" : { "index" : "${index}-${today}", "alias" : "${index}" } }
+    ]
+}
+EOF
+  else
+    log "Yesterdays index does exist"
+    cat <<EOF >/tmp/index_rotate_data.tmp
+{
+    "actions" : [
+        { "remove" : { "index" : "${index}-${yesterday}", "alias" : "${index}" } },
+        { "add" : { "index" : "${index}-${today}", "alias" : "${index}" } }
+    ]
+}
+EOF
+  fi
+
+  echo "index_rotate_data.tmp file contents:"
+  cat /tmp/index_rotate_data.tmp
+
+  log "Rotate alias"
+  curl -s -XPOST "http://$elasticMaster/_aliases" -d @/tmp/index_rotate_data.tmp
+
+done
+
+rm /tmp/index_rotate_data.tmp
+

@@ -1,0 +1,5 @@
+---
+spark_task_processor_driver_memory: 1g
+spark_task_processor_executor_memory: 4g
+spark_task_processor_num_executors: 1
+spark_task_processor_executor_cores: 1

@@ -1,0 +1,3 @@
+---
+docker_storage_driver: --storage-driver=overlay
+docker_logging: '--log-driver syslog --log-opt syslog-facility=local6'

@@ -1,0 +1,69 @@
+---
+- name: set facts for logstash
+  set_fact: logstash_host_dir=/srv/services/logstash
+
+- name: create directories for logstash
+  file: path="{{ item }}" state=directory mode=0755 owner=1000 group=1000
+  with_items:
+    - "{{ logstash_host_dir }}"
+    - "{{ logstash_conf_dir }}"
+    - "{{ logstash_log_dir }}"
+    - "{{ logstash_tmp_dir }}"
+    - "{{ logstash_pipeline_dir }}"
+
+- name: create a symbolic link for conf directory of logstash
+  file: src="{{ logstash_conf_dir }}" dest="{{ logstash_host_dir }}/conf" state=link
+
+- name: create a symbolic link for pipeline directory of logstash
+  file: src="{{ logstash_pipeline_dir }}" dest="{{ logstash_host_dir }}/pipeline" state=link
+
+- name: create a symbolic link for tmp directory of logstash
+  file: src="{{ logstash_tmp_dir }}" dest="{{ logstash_host_dir }}/tmp" state=link
+
+- name: create a symbolic link for host directory of logstash
+  file: src="{{ logstash_log_dir }}" dest="{{ logstash_host_dir }}/log" state=link
+
+- name: copy configuration
+  template: src={{ item }}.j2 dest="{{ logstash_pipeline_dir }}/{{ item }}"
+  with_items:
+    - logstash.conf
+  notify: restart logstash
+
+- name: copy configuration
+  template: src={{ item }}.j2 dest="{{ logstash_host_dir }}/conf/{{ item }}"
+  with_items:
+    - logstash.yml
+    - template-logs.json
+  notify: restart logstash
+
+- meta: flush_handlers
+
+- name: add container to whitelist
+  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'logstash' ]"
+  tags: always
+
+- name: enumerate log directories on physical volumes
+  set_fact: physical_log_dirs_list="{{ item }}:{{ item }}:ro"
+  with_items: "{{ log_dirs }}"
+  register: physical_log_dirs_list_result
+
+- name: compile a list of log directories on physical volumes
+  set_fact: physical_volumes="{{ physical_log_dirs_list_result.results | map(attribute='ansible_facts.physical_log_dirs_list') | list }}"
+
+- name: start logstash
+  vars:
+    volumes:
+      - "{{ logstash_host_dir }}/pipeline:/usr/share/logstash/pipeline:ro"
+      - "{{ logstash_host_dir }}/conf:/usr/share/logstash/config:ro"
+      - "{{ logstash_host_dir }}/tmp:/tmp"
+      - "{{ logstash_host_dir }}/log:/var/log/logstash"
+      - "/srv/services:/srv/services:ro"
+  docker_container:
+    name: logstash
+    state: started
+    restart_policy: unless-stopped
+    image: docker.elastic.co/logstash/logstash:5.2.2
+    recreate: "{{ logstash_restart_docker|default('no') }}"
+    network_mode: host
+    log_driver: json-file
+    volumes: "{{ volumes + physical_volumes }}"

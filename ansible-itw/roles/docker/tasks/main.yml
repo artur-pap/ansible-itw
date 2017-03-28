@@ -1,0 +1,31 @@
+# TODO: remove
+- name: uninstall old docker
+  yum: name={{ item }} state=absent
+  with_items:
+    - docker
+    - docker-selinux
+    - docker-common
+
+- name: install docker
+  yum: name=docker-engine-1.12.6 state=installed
+
+- name: create the systemd directory for docker
+  file: path=/etc/systemd/system/docker.service.d state=directory
+
+- name: create the ssl certification directory for docker
+  file: path=/etc/docker/certs.d/docker.epmc-bdcc.projects.epam.com state=directory
+
+# TODO: remove
+- name: create the systemd override directory for docker
+  file: path=/etc/systemd/system/docker.service.d/override.conf state=absent
+
+- name: create the systemd docker options configuration file
+  template: src=docker_opts.conf.j2 dest=/etc/systemd/system/docker.service.d/docker_opts.conf
+  notify:
+    - reload systemd
+    - restart docker
+
+- meta: flush_handlers
+
+- name: Start Docker service
+  service: name=docker state=running enabled=true

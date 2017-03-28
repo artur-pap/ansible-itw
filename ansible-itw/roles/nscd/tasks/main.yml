@@ -1,0 +1,12 @@
+---
+
+- name: install nscd
+  yum:      name=nscd
+            state=installed
+  tags:     nscd
+
+- name: start nscd
+  service:  name=nscd
+            state=started
+            enabled=yes
+  tags:     nscd

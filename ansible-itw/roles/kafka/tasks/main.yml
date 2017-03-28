@@ -1,0 +1,68 @@
+---
+- name: set facts for kafka
+  set_fact: kafka_host_dir=/srv/services/kafka
+
+- name: create directories for kafka
+  file: path="{{ item }}" state=directory
+  with_items:
+    - "{{ kafka_host_dir }}/data"
+    - "{{ kafka_conf_dir }}"
+    - "{{ kafka_log_dir }}"
+
+- name: create directories for kafka
+  file: path="{{ item }}" state=directory mode=0777
+  with_items:
+    - "{{ kafka_data_dirs|map(attribute='dir')|list }}"
+
+- name: create a symbolic link for conf directory for kafka
+  file: src="{{ kafka_conf_dir }}" dest="{{ kafka_host_dir }}/conf" state=link force=yes
+
+- name: create a symbolic link for conf directory for kafka
+  file: src="{{ kafka_log_dir }}" dest="{{ kafka_host_dir }}/log" state=link force=yes
+
+- name: create a symbolic link for data directory for kafka
+  file: src="{{ item.dir }}" dest="{{ kafka_host_dir }}/data/{{ item.ix }}" state=link force=yes
+  with_items: "{{ kafka_data_dirs }}"
+
+- name: copy configuration
+  template: src="{{ item }}.j2" dest="{{ kafka_host_dir }}/conf/{{ item }}"
+  with_items:
+    - log4j.properties
+    - server.properties
+    - jmxport.txt
+  notify: restart kafka
+
+- meta: flush_handlers
+
+- name: set data_dirs fact for kafka
+  set_fact: kafka_data_dirs_docker_tmp="{{ kafka_host_dir }}/data/{{ item }}:/data/{{ item }}"
+  with_items: "{{ kafka_data_dirs|map(attribute='ix')|list }}"
+  register: kafka_data_dirs_docker_result
+
+- name: set data_dirs fact for kafka
+  set_fact: kafka_data_dirs_docker="{{ kafka_data_dirs_docker_result.results | map(attribute='ansible_facts.kafka_data_dirs_docker_tmp') | list }}"
+
+- name: add container to whitelist
+  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'kafka' ]"
+  tags: always
+
+- name: start kafka
+  vars:
+    volumes:
+      - "{{ kafka_host_dir }}/conf:/conf:ro"
+      - "{{ kafka_host_dir }}/conf/log4j.properties:/etc/kafka/log4j.properties:ro"
+      - "{{ kafka_host_dir }}/log:/log"
+  docker_container:
+    name: kafka
+    state: started
+    restart_policy: unless-stopped
+    image: confluentinc/cp-kafka:3.1.2-1
+    recreate: "{{ kafka_restart_docker|default('no') }}"
+    network_mode: host
+    log_driver: json-file
+    entrypoint: "/usr/bin/kafka-server-start"
+    command: "/conf/server.properties"
+    env:
+      KAFKA_HEAP_OPTS: -Xmx2g -XX:+UseG1GC
+      JMX_PORT: "{{ kafka_jmx_port}}"
+    volumes: "{{ volumes + kafka_data_dirs_docker }}"

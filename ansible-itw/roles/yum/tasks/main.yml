@@ -1,0 +1,37 @@
+---
+
+- name: configure yum.conf
+  template: src=yum.conf.j2 dest=/etc/yum.conf
+  tags: yum
+
+- name: install centos 6 repos
+  copy: src=6/{{ item }}
+        dest=/etc/yum.repos.d/{{ item }}
+  with_items:
+        - CentOS-Base.repo
+        - CentOS-Debuginfo.repo
+  tags: yum
+  when: ( ansible_distribution == "CentOS" and ansible_distribution_major_version == "6" )
+
+- name: set EPEL key
+  copy: src=7/RPM-GPG-KEY-EPEL-7
+        dest=/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+  tags: yum
+  when: ( ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" )
+
+- name: install centos 7 repos
+  copy: src=7/{{ item }}
+        dest=/etc/yum.repos.d/{{ item }}
+  with_items:
+        -  CentOS-Base.repo
+        -  CentOS-CR.repo
+        -  CentOS-Debuginfo.repo
+        -  CentOS-fasttrack.repo
+        -  CentOS-Media.repo
+        -  CentOS-Sources.repo
+        -  CentOS-Vault.repo
+        -  epel.repo
+        -  epel-testing.repo
+        -  docker.repo
+  tags: yum
+  when: ( ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" )

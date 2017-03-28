@@ -1,0 +1,40 @@
+# TODO: create ivy settings after upgrade to Spark 2.2
+spark.jars.ivySettings
+#spark.jars.ivy
+
+spark.master                     mesos://zk://{{ zookeeper_hosts }}/mesos
+
+spark.eventLog.enabled           true
+spark.eventLog.dir               hdfs://{{ hdfs_hosts }}/spark-eventlog
+
+spark.serializer                 org.apache.spark.serializer.KryoSerializer
+spark.kryo.unsafe                true
+
+spark.driver.memory              1g
+spark.executor.memory            1g
+spark.executor.cores	           4
+spark.default.parallelism        16
+spark.cores.max	                 8
+
+spark.mesos.executor.docker.image {{ spark_mesos_image }}
+spark.mesos.executor.docker.volumes /srv/services/hadoop/conf:/hadoop/conf:ro,/srv/services/spark/conf:/spark/conf:ro,/srv/services/spark/conf/hosts:/etc/hosts:ro
+spark.mesos.executor.home        /spark
+spark.mesos.containerizer	       docker
+spark.files.useFetchCache	       false
+
+spark.streaming.stopGracefullyOnShutdown true
+spark.streaming.kafka.maxRetries 2
+
+# TODO
+spark.submit.deployMode          client
+#spark.deploy.recoveryMode        ZOOKEEPER
+#spark.deploy.zookeeper.url       zk://{{ zookeeper_hosts }}
+#spark.deploy.zookeeper.dir       spark
+
+# TODO
+spark.shuffle.service.enabled	   false
+spark.dynamicAllocation.enabled  false
+spark.shuffle.service.port	     7337
+
+
+#spark.executor.extraJavaOptions  -XX:+PrintGCDetails

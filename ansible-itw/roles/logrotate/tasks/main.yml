@@ -1,0 +1,21 @@
+---
+- name: Installing logrotate
+  apt:
+    name: logrotate
+    state: latest
+  when: ansible_os_family == 'Debian'
+
+- name: Installing logrotate
+  yum:
+    name: logrotate
+    state: latest
+  when: ansible_os_family == 'RedHat'
+
+- name: Configuring logrotate
+  template:
+    src: logrotate.d.j2
+    dest: "/etc/logrotate.d/{{ item.name }}"
+    owner: root
+    group: root
+    mode: "0644"
+  with_items: "{{ logrotate_scripts }}"

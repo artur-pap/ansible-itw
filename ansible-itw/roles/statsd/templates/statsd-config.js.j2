@@ -1,0 +1,10 @@
+{
+  graphitePort: "{{ net_graphite_port }}",
+  graphiteHost: "{{ net_graphite_host }}",
+  port: "{{ statsd_port }}",
+  deleteCounters: false,
+  flushInterval: 15000,
+  graphite: {
+    legacyNamespace: false,
+  }
+}

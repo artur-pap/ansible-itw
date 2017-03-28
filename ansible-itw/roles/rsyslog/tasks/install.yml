@@ -1,0 +1,4 @@
+---
+
+- name: ensure rsyslog-elasticsearch is installed
+  yum: name="rsyslog-elasticsearch" state=present

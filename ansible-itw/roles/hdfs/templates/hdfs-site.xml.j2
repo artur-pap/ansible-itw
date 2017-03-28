@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+  <property>
+    <name>dfs.namenode.name.dir</name>
+    <value>file:///data-namenode</value>
+  </property>
+  <property>
+    <name>dfs.datanode.data.dir</name>
+    <value>{% for dir in hdfs_datanode_data_dirs %}file:///data-datanode/{{ loop.index0 }}{% if not loop.last %},{% endif %}{% endfor %}</value>
+  </property>
+
+  <property>
+    <name>dfs.datanode.address</name>
+    <value>{{ net_internal_ip }}:{{ hdfs_datanode_data_transfer_port }}</value>
+  </property>
+  <property>
+    <name>dfs.datanode.http.address</name>
+    <value>{{ net_internal_ip }}:{{ hdfs_datanode_http_port }}</value>
+  </property>
+  <property>
+    <name>dfs.datanode.https.address</name>
+    <value>{{ net_internal_ip }}:{{ hdfs_datanode_https_port }}</value>
+  </property>
+  <property>
+    <name>dfs.datanode.ipc.address</name>
+    <value>{{ net_internal_ip }}:{{ hdfs_datanode_ipc_port }}</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.rpc-address</name>
+    <value>{{ hostvars[groups['hdfs-namenodes'][0]].net_internal_ip }}:{{ hdfs_namenode_rpc_port }}</value>
+  </property>
+  <property>
+    <name>dfs.namenode.http-address</name>
+    <value>{{ hostvars[groups['hdfs-namenodes'][0]].net_internal_ip }}:{{ hdfs_namenode_http_port }}</value>
+  </property>
+  <property>
+    <name>dfs.namenode.https-address</name>
+    <value>{{ hostvars[groups['hdfs-namenodes'][0]].net_internal_ip }}:{{ hdfs_namenode_https_port }}</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+    <value>false</value>
+  </property>
+
+  <property>
+    <name>dfs.client.local.interfaces</name>
+    <value>{{ net_internal_iface }}</value>
+  </property>
+
+  <!--
+  <property>
+    <name>dfs.journalnode.rpc-address</name>
+    <value>{{ net_internal_ip }}:{{ hdfs_journalnode_rpc_port }}</value>
+  </property>
+  <property>
+    <name>dfs.journalnode.http-address</name>
+    <value>{{ net_internal_ip }}:{{ hdfs_journalnode_http_port }}</value>
+  </property>
+  <property>
+    <name>dfs.journalnode.https-address</name>
+    <value>{{ net_internal_ip }}:{{ hdfs_journalnode_https_port }}</value>
+  </property>
+  -->
+</configuration>

@@ -1,0 +1,3 @@
+---
+- name: restart spark apps
+  set_fact: spark_restart_apps=yes

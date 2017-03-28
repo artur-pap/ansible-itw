@@ -1,0 +1,44 @@
+---
+- name: set facts for docker-proxy
+  set_fact: docker_proxy_host_dir=/srv/services/docker-proxy
+
+- name: create docker_proxy directory
+  file: path={{ docker_proxy_host_dir }} state=directory
+
+- name: create docker proxy conf and data directories
+  file: path={{ item }} state=directory
+  with_items:
+    - "{{ docker_proxy_data_dir }}"
+    - "{{ docker_proxy_conf_dir }}"
+
+- name: create a symbolic link for docker_proxy data directory
+  file: src="{{ docker_proxy_data_dir }}" dest="{{ docker_proxy_host_dir }}/data" state=link force=yes
+
+- name: create a symbolic link for docker_proxy conf directory
+  file: src="{{ docker_proxy_conf_dir }}" dest="{{ docker_proxy_host_dir }}/conf" state=link force=yes
+
+- name: create the docker_proxy configuration file
+  template: src=config.yml.j2 dest="{{ docker_proxy_host_dir }}/conf/config.yml"
+  notify: restart docker-proxy
+
+- meta: flush_handlers
+
+- name: add container to whitelist
+  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'docker-proxy' ]"
+  tags: always
+
+- name: start docker containers
+  docker_container:
+    name: docker-proxy
+    state: started
+    image: registry:2.5.1
+    restart_policy: unless-stopped
+    recreate: "{{ docker_proxy_restart_docker|default('no') }}"
+    network_mode: host # for 127.0.0.1 access
+    log_driver: json-file
+    published_ports:
+      - "{{ docker_proxy_port }}:{{ docker_proxy_port }}"
+    volumes:
+      - "{{ docker_proxy_host_dir }}/data:/var/lib/registry"
+      - "{{ docker_proxy_host_dir }}/conf:/etc/docker/registry"
+    env: "{{ proxy_environment }}"

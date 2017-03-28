@@ -1,0 +1,6 @@
+log4j.rootLogger=INFO,logstash
+
+log4j.appender.logstash=org.apache.log4j.net.SocketAppender
+log4j.appender.logstash.application=spark
+log4j.appender.logstash.remoteHost=127.0.0.1
+log4j.appender.logstash.port={{ logstash_log4j_port }}

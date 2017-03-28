@@ -1,0 +1,16 @@
+---
+- name: Disable gateway when net_external_disable_gateway is defined
+  lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-{{ net_external_iface }} regexp='^(GATEWAY.*)' line='#\1' backrefs=yes
+  when: net_external_disable_gateway is defined and net_external_disable_gateway
+  tags: network
+
+- name: Set external routes when net_external_routes is defined
+  copy: dest=/etc/sysconfig/network-scripts/route-{{ net_external_iface }} content='{{ net_external_routes|join("\n")}}'
+  when: net_external_routes is defined
+  tags: network
+
+- name: update /etc/hosts
+  template: src=hosts.j2 dest=/etc/hosts
+
+- name: set hostname
+  hostname: name={{ hostname }}

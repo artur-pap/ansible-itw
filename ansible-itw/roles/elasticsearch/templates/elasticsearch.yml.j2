@@ -1,0 +1,31 @@
+cluster.name: "elastic_cluster"
+node.name: "{{ inventory_hostname }}_{{ es_container_name }}"
+network.host: {{ net_internal_ip }}
+
+discovery.zen.ping.unicast.hosts: [{% for host in groups['elastic_master_node'] %}"{{ hostvars[host]['net_internal_ip'] }}"{% if not loop.last %},{% endif %}{% endfor %}]
+
+path:
+    data: /data
+
+xpack.security.enabled: false
+
+# For elasticsearch 5, this is not a valid option
+#bootstrap.mlockall: true
+
+# For elasticsearch 5, this is not a valid option
+#index.refresh_interval: 10s
+
+{%if is_master %}
+node.master: true
+node.data: false
+{% endif %}
+
+{%if not is_master and is_data %}
+node.master: false
+node.data: true
+{% endif %}
+
+{%if not is_master and not is_data %}
+node.master: false
+node.data: false
+{% endif %}

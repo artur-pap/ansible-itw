@@ -1,0 +1,261 @@
+{% set log4j_apps = [
+  'elasticsearch/*/*',
+  'flume',
+  'hdfs-namenode',
+  'hdfs-datanode',
+  'jmxtrans',
+  'kafka',
+  'kafka-http-proxy',
+  'kafka-mirrormaker',
+  'zeppelin',
+  'zookeeper'
+] %}
+{% set logback_apps = [
+  'cassandra',
+  'kafka-ingester'
+] %}
+{% set mesos_apps = [
+  'mesos-master',
+  'mesos-slave'
+] %}
+
+input {
+  {% for app in log4j_apps %}
+  {% set app_name = app.split("/")|first %}
+  file {
+    path => "/srv/services/{{ app }}/log/*.log"
+    type => "{{ app_name }}"
+    tags => ["log4j"]
+    start_position => "beginning"
+    codec => multiline {
+      pattern => "^\[\[\[MSG\]\]\] \["
+      negate => true
+      what => previous
+      auto_flush_interval => 5
+    }
+  }
+  file {
+    path => "/srv/services/{{ app }}/log/*.log.*"
+    type => "{{ app_name }}"
+    tags => ["log4j"]
+    start_position => "end"
+    codec => multiline {
+      pattern => "^\[\[\[MSG\]\]\] \["
+      negate => true
+      what => previous
+      auto_flush_interval => 5
+    }
+  }
+  {% endfor %}
+  {% for app in logback_apps %}
+  file {
+    path => "/srv/services/{{ app }}/log/*.log.*"
+    type => "{{ app }}"
+    tags => ["logback"]
+    start_position => "beginning"
+    codec => multiline {
+      pattern => "^\[\[\[MSG\]\]\] \["
+      negate => true
+      what => previous
+      auto_flush_interval => 5
+    }
+  }
+  {% endfor %}
+  {% for app in mesos_apps %}
+  file {
+    path => "/srv/services/{{ app }}/log/*.log.INFO.*"
+    type => "{{ app }}"
+    tags => ["mesos"]
+    start_position => "beginning"
+  }
+  {% endfor %}
+  log4j {
+    port => {{ logstash_log4j_port }}
+    tags => ["log4j-net"]
+  }
+  file {
+    path => "/srv/services/nginx/log/*.log"
+    type => "nginx"
+    tags => ["nginx-access"]
+    start_position => "beginning"
+  }
+}
+
+filter {
+  if "log4j" in [tags] {
+    grok {
+      match => {
+        "message" => [
+        '(?m)\[\[\[MSG\]\]\] \[%{TIMESTAMP_ISO8601:timestamp}\] \[%{WORD:level}\] \[logger:%{DATA:logger}\] \[thread:%{DATA:thread}\] \[mdc:%{DATA:mdc}\]\s?%{GREEDYDATA:message}'
+        ]
+      }
+      overwrite => [ "message" ]
+    }
+    date {
+      locale => "en-US"
+      match => [ "timestamp", "ISO8601" ]
+    }
+  }
+  if "logback" in [tags] {
+    grok {
+      match => {
+        "message" => [
+        '(?m)\[\[\[MSG\]\]\] \[%{TIMESTAMP_ISO8601:timestamp}\] \[%{WORD:level}\] \[logger:%{DATA:logger}\] \[thread:%{DATA:thread}\] \[mdc:%{DATA:mdc}\]\s?%{GREEDYDATA:message}'
+        ]
+      }
+      overwrite => [ "message" ]
+    }
+    date {
+      locale => "en-US"
+      match => [ "timestamp", "ISO8601" ]
+    }
+  }
+  if "log4j-net" in [tags] {
+    mutate {
+      rename => {
+        "logger_name" => "logger"
+        "application" => "type"
+        "priority" => "level"
+      }
+      remove_field => [ "path" ]
+    }
+    date {
+      locale => "en-US"
+      match => [ "timestamp", "UNIX_MS" ]
+    }
+  }
+
+  if "mesos" in [tags] {
+    grok {
+      match => {
+        "path" => "%{GREEDYDATA}.log.INFO.(?<year>\d\d\d\d)(?<filename_month>\d\d)%{GREEDYDATA}"
+      }
+    }
+    grok {
+      match => {
+        "message" => "(?<level>[EFIW])(?<month>\d\d)(?<day>\d\d)\s+%{TIME:time}\s+%{BASE10NUM:thread}\s+%{NOTSPACE:file}\:%{BASE10NUM:line}\]\s+%{GREEDYDATA:message}"
+      }
+      overwrite => [ "message" ]
+    }
+    if "_grokparsefailure" not in [tags] {
+      ruby {
+        code => 'event.set("[year]", event.get("[year]").to_i + 1) if !event.get("[month]").nil? and event.get("[filename_month]") > event.get("[month]")'
+      }
+
+      mutate {
+        add_field => {
+          "date_time" => "%{year}-%{month}-%{day}T%{time}Z"
+        }
+      }
+
+      if [path] =~ ".*\/executors\/.*" {
+        grok {
+          match => {
+            "path" => "/%{GREEDYDATA}/executors/%{GREEDYDATA:app}[.]%{GREEDYDATA}"
+          }
+        }
+      }
+
+      if [level] =~ "E" {
+        mutate {
+          replace => {
+            "level" => "ERROR"
+          }
+        }
+      }
+
+      if [level] =~ "F" {
+        mutate {
+          replace => {
+            "level" => "FATAL"
+          }
+        }
+      }
+
+      if [level] =~ "I" {
+        mutate {
+          replace => {
+            "level" => "INFO"
+          }
+        }
+      }
+
+      if [level] =~ "W" {
+        mutate {
+          replace => {
+            "level" => "WARN"
+          }
+        }
+      }
+
+      mutate {
+        convert => {
+          "line" => "integer"
+        }
+      }
+
+      mutate {
+        convert => {
+          "thread_id" => "integer"
+        }
+      }
+
+      date {
+        match => [ "date_time", "ISO8601" ]
+      }
+    }
+
+    mutate {
+      remove_field => [ "day", "filename_month", "month", "year", "time", "date_time" ]
+    }
+  }
+  if "nginx" in [tags] {
+    grok {
+      match => {
+        "message" => "%{IPORHOST:clientip} %{GREEDYDATA:ident} %{GREEDYDATA:auth} \[%{HTTPDATE:timestamp}\] \"%{WORD:verb} %{URIPATHPARAM:request} HTTP/%{NUMBER:httpversion}\" %{NUMBER:response}"
+      }
+    }
+    date {
+      match => [ "timestamp", "dd/MMM/YYYY:HH:mm:ss Z" ]
+      locale => "en_US"
+    }
+  }
+}
+
+output {
+  if "log4j" in [tags] {
+    elasticsearch {
+      hosts => [{%for host in groups['elastic_client_node'] %}"{{ hostvars[host]['net_internal_ip'] }}:{{ elasticsearch_http_port }}"{% if not loop.last %},{% endif %}{% endfor %}]
+      template => "/usr/share/logstash/config/template-logs.json"
+      index => "logs-%{+YYYY.MM.dd}"
+    }
+  }
+  if "logback" in [tags] {
+    elasticsearch {
+      hosts => [{%for host in groups['elastic_client_node'] %}"{{ hostvars[host]['net_internal_ip'] }}:{{ elasticsearch_http_port }}"{% if not loop.last %},{% endif %}{% endfor %}]
+      template => "/usr/share/logstash/config/template-logs.json"
+      index => "logs-%{+YYYY.MM.dd}"
+    }
+  }
+  if "log4j-net" in [tags] {
+    elasticsearch {
+      hosts => [{%for host in groups['elastic_client_node'] %}"{{ hostvars[host]['net_internal_ip'] }}:{{ elasticsearch_http_port }}"{% if not loop.last %},{% endif %}{% endfor %}]
+      template => "/usr/share/logstash/config/template-logs.json"
+      index => "logs-%{+YYYY.MM.dd}"
+    }
+  }
+  if "mesos" in [tags] {
+    elasticsearch {
+      hosts => [{%for host in groups['elastic_client_node'] %}"{{ hostvars[host]['net_internal_ip'] }}:{{ elasticsearch_http_port }}"{% if not loop.last %},{% endif %}{% endfor %}]
+      template => "/usr/share/logstash/config/template-logs.json"
+      index => "logs-%{+YYYY.MM.dd}"
+    }
+  }
+  if "nginx" in [tags] {
+    elasticsearch {
+      hosts => [{%for host in groups['elastic_client_node'] %}"{{ hostvars[host]['net_internal_ip'] }}:{{ elasticsearch_http_port }}"{% if not loop.last %},{% endif %}{% endfor %}]
+      template => "/usr/share/logstash/config/template-logs.json"
+      index => "logs-%{+YYYY.MM.dd}"
+    }
+  }
+}

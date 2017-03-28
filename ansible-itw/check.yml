@@ -1,0 +1,9 @@
+---
+ - name: ansible version check
+  hosts: localhost
+  tags: always
+  tasks:
+    - name: check if user is using correct ansible version
+      fail:
+        msg: "Unsupported ansible version {{ ansible_version.string }}. Please use 2.2.0.0 version."
+      when: ansible_version.full != "2.2.0.0"

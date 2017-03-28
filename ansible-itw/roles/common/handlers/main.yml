@@ -1,0 +1,6 @@
+---
+- name: reload systemd
+  command: systemctl daemon-reload
+
+- name: reload ferm
+  service: name=ferm state=reloaded

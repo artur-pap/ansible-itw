@@ -1,0 +1,115 @@
+#!/bin/bash
+
+index="$1"
+
+curl -XPUT "http://{{ hostvars[groups['elastic_master_node'][0]].net_internal_ip }}:{{ elasticsearch_http_port }}/${index}" -d' {
+"mappings": {
+     "kafka-data": {
+         "properties": {
+                    "@timestamp": {
+                        "type": "date",
+                        "format": "strict_date_optional_time||epoch_millis"
+                    },
+                    "@version": {
+                        "type": "keyword"
+                    },
+                    "beat": {
+                        "properties": {
+                            "hostname": {
+                                "type": "keyword"
+                            },
+                            "name": {
+                                "type": "keyword"
+                            }
+                        }
+                    },
+                    "cache_status": {
+                        "type": "keyword"
+                    },
+                    "camel_id": {
+                        "type": "text",
+                        "index": "not_analyzed"
+                    },
+                    "con_active": {
+                        "type": "integer"
+                    },
+                    "con_reading": {
+                        "type": "integer"
+                    },
+                    "con_waiting": {
+                        "type": "integer"
+                    },
+                    "con_writing": {
+                        "type": "integer"
+                    },
+                    "count": {
+                        "type": "long"
+                    },
+                    "cpe_id": {
+                        "type": "text"
+                    },
+                    "fields": {
+                        "properties": {
+                            "environment": {
+                                "type": "keyword"
+                            }
+                        }
+                    },
+                    "file": {
+                        "type": "keyword",
+                        "index": "no"
+                    },
+                    "host": {
+                        "type": "text",
+                        "index": "not_analyzed"
+                    },
+                    "input_type": {
+                        "type": "keyword"
+                    },
+                    "message": {
+                        "type": "text"
+                    },
+                    "offset": {
+                        "type": "long"
+                    },
+                    "remote_addr": {
+                        "type": "keyword"
+                    },
+                    "request": {
+                        "type": "text",
+                        "index": "not_analyzed"
+                    },
+                    "request_time": {
+                        "type": "float"
+                    },
+                    "source": {
+                        "type": "keyword"
+                    },
+                    "status": {
+                        "type": "keyword"
+                    },
+                    "time_local": {
+                        "type": "keyword",
+                        "index": "no"
+                    },
+                    "timestamp_mili": {
+                        "type": "date",
+                        "format": "epoch_millis"
+                    },
+                    "type": {
+                        "type": "keyword"
+                    },
+                    "upstream_addr": {
+                        "type": "keyword"
+                    },
+                    "upstream_response_time": {
+                        "type": "float"
+                    }
+         }
+     }
+},
+"settings": {
+    "number_of_shards" :   6,
+    "number_of_replicas" : 1
+}
+}'

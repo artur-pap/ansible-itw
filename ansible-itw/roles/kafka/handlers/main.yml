@@ -1,0 +1,3 @@
+---
+- name: restart kafka
+  set_fact: kafka_restart_docker=yes

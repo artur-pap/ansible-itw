@@ -1,0 +1,4 @@
+# This file is not used by Kafka Connect, but only for Ansible state-keeping.
+{% for item in kafka_connect_topic_index_map %}
+{{ item.kafka_topic }}:{{ item.es_index }}
+{% endfor %}

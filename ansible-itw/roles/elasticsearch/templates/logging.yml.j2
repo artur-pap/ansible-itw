@@ -1,0 +1,14 @@
+rootLogger: INFO, file
+logger:
+  action: DEBUG
+  com.amazonaws: WARN
+
+appender:
+  file:
+    type: org.apache.log4j.RollingFileAppender
+    file: /log/main.log
+    maxBackupIndex: 5
+    maxFileSize: 50MB
+    layout:
+      type: org.apache.log4j.EnhancedPatternLayout
+      conversionPattern: "[[[MSG]]] [%d{ISO8601}] [%p] [logger:%c] [thread:%t] [mdc:%X] %m %throwable%n"

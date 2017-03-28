@@ -1,0 +1,29 @@
+---
+- include: memory_management.yml
+
+- name: set facts for elasticsearch
+  set_fact:
+    elasticsearch_host_dir: /srv/services/elasticsearch
+
+- name: set facts for elasticsearch
+  set_fact:
+    node_name_template: "es_master"
+  tags: always
+  when: is_master
+
+- name: set facts for elasticsearch
+  set_fact:
+    node_name_template: "es_data"
+  tags: always
+  when: is_data
+
+- name: set facts for elasticsearch
+  set_fact:
+    node_name_template: "es_client"
+  tags: always
+  when: not is_master and not is_data
+
+- include: instance.yml
+  with_sequence: start=0 end={{ nodecount - 1 }}
+  loop_control:
+    loop_var: outer_item

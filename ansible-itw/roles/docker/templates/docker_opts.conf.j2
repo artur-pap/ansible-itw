@@ -1,0 +1,12 @@
+[Service]
+Restart=always
+StartLimitInterval=0
+RestartSec=15
+ExecStartPre=-/sbin/ip link del docker0
+ExecStart=
+ExecStart=/usr/bin/docker daemon --ipv6=false {{ docker_storage_driver }} -H unix:///var/run/docker.sock {{ docker_registry_opts }} {{ docker_logging }}
+{% if net_local_http_proxy_for_internet_access is defined %}
+Environment = 'HTTP_PROXY=http://{{ net_local_http_proxy_for_internet_access }}'
+Environment = 'HTTPS_PROXY=http://{{ net_local_http_proxy_for_internet_access }}'
+Environment = 'NO_PROXY=127.0.0.1,{{ insecure_registry }}'
+{% endif %}

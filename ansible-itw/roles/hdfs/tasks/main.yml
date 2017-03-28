@@ -1,0 +1,145 @@
+---
+- name: set facts for hdfs
+  set_fact:
+    hdfs_datanode_host_dir: /srv/services/hdfs-datanode
+    hdfs_namenode_host_dir: /srv/services/hdfs-namenode
+    hdfs_namenode_format_host_dir: /srv/services/hdfs-namenode-format
+    hadoop_host_dir: /srv/services/hadoop
+
+- name: create directories for hdfs
+  file: path="{{ item }}" state=directory
+  with_items:
+    - "{{ hadoop_conf_dir }}"
+    - "{{ hadoop_host_dir }}"
+
+- name: create directories for hdfs-namenode
+  file: path="{{ item }}" state=directory
+  with_items:
+    - "{{ hdfs_namenode_host_dir }}"
+    - "{{ hdfs_namenode_format_host_dir }}"
+    - "{{ hdfs_namenode_data_dir }}"
+    - "{{ hdfs_namenode_log_dir }}"
+    - "{{ hdfs_namenode_format_log_dir }}"
+  when: "'hdfs-namenodes' in group_names"
+
+- name: create directories for hdfs-datanode
+  file: path="{{ item }}" state=directory
+  with_items:
+    - "{{ hdfs_datanode_host_dir }}/data"
+    - "{{ hdfs_datanode_data_dirs }}"
+    - "{{ hdfs_datanode_log_dir }}"
+  when: "'hdfs-datanodes' in group_names"
+
+- name: link hadoop configuration directory
+  file: src="{{ hadoop_conf_dir }}" dest="{{ hadoop_host_dir }}/conf" state=link force=yes
+
+- name: link hdfs-namenode configuration directory
+  file: src="{{ hadoop_conf_dir }}" dest="{{ hdfs_namenode_host_dir }}/conf" state=link force=yes
+  when: "'hdfs-namenodes' in group_names"
+
+- name: link hdfs-namenode data directory
+  file: src="{{ hdfs_namenode_data_dir }}" dest="{{ hdfs_namenode_host_dir }}/data" state=link force=yes
+  when: "'hdfs-namenodes' in group_names"
+
+- name: link hdfs-namenode log directory
+  file: src="{{ hdfs_namenode_log_dir }}" dest="{{ hdfs_namenode_host_dir }}/log" state=link force=yes
+  when: "'hdfs-namenodes' in group_names"
+
+- name: link hdfs-namenode log-format directory
+  file: src="{{ hdfs_namenode_format_log_dir }}" dest="{{ hdfs_namenode_format_host_dir }}/log" state=link force=yes
+  when: "'hdfs-namenodes' in group_names"
+
+- name: link hdfs-datanode configuration directory
+  file: src="{{ hadoop_conf_dir }}" dest="{{ hdfs_datanode_host_dir }}/conf" state=link force=yes
+  when: "'hdfs-datanodes' in group_names"
+
+- name: link hdfs-datanode log directory
+  file: src="{{ hdfs_datanode_log_dir }}" dest="{{ hdfs_datanode_host_dir }}/log" state=link force=yes
+  when: "'hdfs-datanodes' in group_names"
+
+- name: link hdfs-datanode data directories
+  file: src="{{ item.1 }}" dest="{{ hdfs_datanode_host_dir }}/data/{{ item.0 }}" state=link force=yes
+  with_indexed_items: "{{ hdfs_datanode_data_dirs }}"
+  when: "'hdfs-datanodes' in group_names"
+
+- name: copy configuration
+  template: src={{ item }}.j2 dest="{{ hadoop_conf_dir }}/{{ item }}"
+  with_items:
+    - core-site.xml
+    - hdfs-site.xml
+    - hadoop-env.sh
+    - log4j.properties
+  notify: restart hdfs
+
+- meta: flush_handlers
+
+- name: check if namenode is formatted
+  stat: path={{ hdfs_namenode_host_dir }}/data/current/VERSION
+  register: hdfs_namenode_host_dir_stat
+  when: "'hdfs-namenodes' in group_names"
+
+- name: format a namenode data dir if needed
+  docker_container:
+    name: hdfs-namenode-format
+    state: started
+    cleanup: yes
+    detach: no
+    image: smartislav/hdfs-namenode:2.7.3
+    recreate: "{{ hdfs_restart_docker|default('no') }}"
+    network_mode: host
+    log_driver: json-file
+    volumes:
+      - "{{ hdfs_namenode_host_dir }}/conf:/hadoop/etc/hadoop:ro"
+      - "{{ hdfs_namenode_host_dir }}/data:/data-namenode"
+      - "{{ hdfs_namenode_format_host_dir }}/log:/log"
+    command: "hdfs namenode -format -nonInteractive -clusterid {{ hdfs_cluster_id }}"
+  when:
+    - "'hdfs-namenodes' in group_names"
+    - "not hdfs_namenode_host_dir_stat.stat.exists"
+
+- name: add container to whitelist
+  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'hdfs-namenode' ]"
+  tags: always
+
+- name: start an hdfs-namenode container
+  docker_container:
+    name: hdfs-namenode
+    state: started
+    restart_policy: unless-stopped
+    image: smartislav/hdfs-namenode:2.7.3
+    recreate: "{{ hdfs_restart_docker|default('no') }}"
+    network_mode: host
+    log_driver: json-file
+    volumes:
+      - "{{ hdfs_namenode_host_dir }}/conf:/hadoop/etc/hadoop:ro"
+      - "{{ hdfs_namenode_host_dir }}/data:/data-namenode"
+      - "{{ hdfs_namenode_host_dir }}/log:/log"
+  when: "'hdfs-namenodes' in group_names"
+
+- name: collect hdfs_datanode_dirs into docker-formatted volumes list
+  set_fact: entry="{{ hdfs_datanode_host_dir }}/data/{{ item.0 }}:/data-datanode/{{ item.0 }}"
+  with_indexed_items: "{{ hdfs_datanode_data_dirs }}"
+  register: hdfs_datanode_volumes_list_result
+
+- name: make a list of hdfs-datanode volumes
+  set_fact: hdfs_datanode_volumes_list="{{ hdfs_datanode_volumes_list_result.results | map(attribute='ansible_facts.entry') | list }}"
+
+- name: add container to whitelist
+  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'hdfs-datanode' ]"
+  tags: always
+
+- name: start an hdfs-datanode container
+  vars:
+    volumes:
+      - "{{ hdfs_datanode_host_dir }}/conf:/hadoop/etc/hadoop:ro"
+      - "{{ hdfs_datanode_host_dir }}/log:/log"
+  docker_container:
+    name: hdfs-datanode
+    state: started
+    restart_policy: unless-stopped
+    image: smartislav/hdfs-datanode:2.7.3
+    recreate: "{{ hdfs_restart_docker|default('no') }}"
+    network_mode: host
+    log_driver: json-file
+    volumes: "{{ volumes + hdfs_datanode_volumes_list }}"
+  when: "'hdfs-datanodes' in group_names"

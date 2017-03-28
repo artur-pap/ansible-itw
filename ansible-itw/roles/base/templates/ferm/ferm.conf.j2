@@ -1,0 +1,100 @@
+# -*- shell-script -*-
+
+domain ip {
+    table filter {
+        chain DOCKER {
+            interface !docker0 outerface docker0 daddr 172.17.0.0/16 ACCEPT;
+        }
+
+        chain INPUT {
+        #TODO DROP
+            policy ACCEPT;
+
+            interface lo ACCEPT;
+            {% if net_internal_iface is defined %}
+            interface {{ net_internal_iface }} ACCEPT;
+            {% endif %}
+            interface docker0 ACCEPT;
+
+
+#            interface {{ net_external_iface }} saddr 10.0.0.0/8 DROP;
+
+            proto icmp ACCEPT;
+
+            mod conntrack ctstate (ESTABLISHED RELATED) ACCEPT;
+            #TODO DROP
+#            mod conntrack ctstate INVALID DROP;
+
+            proto tcp dport ssh ACCEPT;
+            proto udp dport ntp ACCEPT;
+            proto (tcp udp) dport 53 ACCEPT;
+
+            @include 'input.d/';
+        }
+        chain OUTPUT {
+            policy ACCEPT;
+
+            proto icmp ACCEPT;
+
+            outerface lo ACCEPT;
+            {% if net_internal_iface is defined %}
+            outerface {{ net_internal_iface }} ACCEPT;
+            {% endif %}
+            outerface docker0 ACCEPT;
+
+            mod conntrack ctstate (ESTABLISHED RELATED) ACCEPT;
+            #mod conntrack ctstate INVALID DROP;
+
+            @include 'output.d/';
+        }
+        chain FORWARD {
+        #TODO DROP
+            policy ACCEPT;
+
+            proto icmp ACCEPT;
+
+            interface docker0 outerface !docker0 ACCEPT;
+            interface docker0 outerface docker0 ACCEPT;
+            {% if net_internal_iface is defined %}
+            interface {{ net_internal_iface }} outerface docker0 ACCEPT;
+            interface {{ net_internal_iface }} outerface {{ net_internal_iface }} ACCEPT;
+            interface {{ net_internal_iface }} outerface {{ net_external_iface }} ACCEPT;
+            {% endif %}
+
+            mod conntrack ctstate (ESTABLISHED RELATED) ACCEPT;
+            #TODO DROP
+#            mod conntrack ctstate INVALID DROP;
+
+            @include 'forward.d/';
+        }
+    }
+
+    table nat {
+        chain DOCKER;
+        chain PREROUTING {
+            {% if net_internal_ip is defined %}
+            # okagent statsd udp port mapping
+            proto udp dport 8125 interface docker0 daddr {{ net_internal_ip }} DNAT to-destination 127.0.0.1:8125;
+            {% endif %}
+
+            mod addrtype dst-type LOCAL jump DOCKER;
+
+            @include 'nat-prerouting.d/';
+        }
+        chain OUTPUT {
+            daddr !127.0.0.0/8 mod addrtype dst-type LOCAL jump DOCKER;
+
+            @include 'nat-output.d/';
+        }
+
+        chain POSTROUTING {
+            #            daddr 10.2.0.0/16 RETURN;
+            {% if net_internal_ip is defined %}
+            saddr 172.17.0.0/16 daddr 10.2.0.0/16 outerface {{ net_external_iface }} SNAT to {{ net_internal_ip }};
+            {% endif %}
+            saddr 172.17.0.0/16 outerface !docker0 MASQUERADE;
+
+            @include 'nat-postrouting.d/';
+        }
+    }
+}

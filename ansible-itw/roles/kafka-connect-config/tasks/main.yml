@@ -1,0 +1,7 @@
+---
+
+- name: Set up index aliasing
+  include: index-aliasing.yml
+
+- name: Set up Kafka Connect settings
+  include: rest-setup.yml

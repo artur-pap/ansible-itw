@@ -1,0 +1,50 @@
+driftfile /var/lib/ntp/drift
+
+restrict default nomodify notrap nopeer noquery
+
+restrict 127.0.0.1 
+restrict ::1
+
+restrict {{ net_internal_net }} mask {{ net_internal_mask }} nomodify notrap
+
+server 127.127.1.0
+fudge 127.127.1.0 stratum 14
+
+server 0.centos.pool.ntp.org iburst
+server 1.centos.pool.ntp.org iburst
+server 2.centos.pool.ntp.org iburst
+server 3.centos.pool.ntp.org iburst
+
+#broadcast 192.168.1.255 autokey	# broadcast server
+#broadcastclient			# broadcast client
+#broadcast 224.0.1.1 autokey		# multicast server
+#multicastclient 224.0.1.1		# multicast client
+#manycastserver 239.255.254.254		# manycast server
+#manycastclient 239.255.254.254 autokey # manycast client
+
+# Enable public key cryptography.
+#crypto
+
+includefile /etc/ntp/crypto/pw
+
+# Key file containing the keys and key identifiers used when operating
+# with symmetric key cryptography. 
+keys /etc/ntp/keys
+
+# Specify the key identifiers which are trusted.
+#trustedkey 4 8 42
+
+# Specify the key identifier to use with the ntpdc utility.
+#requestkey 8
+
+# Specify the key identifier to use with the ntpq utility.
+#controlkey 8
+
+# Enable writing of statistics records.
+#statistics clockstats cryptostats loopstats peerstats
+
+# Disable the monitoring facility to prevent amplification attacks using ntpdc
+# monlist command when default restrict does not include the noquery flag. See
+# CVE-2013-5211 for more details.
+# Note: Monitoring will not be disabled with the limited restriction flag.
+disable monitor

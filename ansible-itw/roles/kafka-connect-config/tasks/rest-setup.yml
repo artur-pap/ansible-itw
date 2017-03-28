@@ -1,0 +1,45 @@
+---
+
+- name: set facts for kafka-connect
+  set_fact: kafka_connect_host_dir=/srv/services/kafka-connect
+
+#
+# Set configuration
+#
+- name: Placeholder for triggering connector update
+  template: src=templates/connector_values.txt.j2 dest="{{ kafka_connect_host_dir }}/connector_values.txt"
+  notify: update kafka-connect-connectors
+
+- meta: flush_handlers
+
+# Wait for Kafka Connect to start
+- wait_for:
+    host: 127.0.0.1
+    port: "{{ kafka_connect_rest_port }}"
+    state: started
+
+- name: update connectors when topic_index_map changes
+  uri:
+    url: "http://127.0.0.1:{{ kafka_connect_rest_port }}/connectors/{{ item.kafka_topic }}/config"
+    method: PUT
+    HEADER_Content-Type: "application/json"
+    body_format: json
+    return_content: yes
+    status_code: "200,201"
+    body: 
+      connector.class: "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector"
+      topics: "{{ item.kafka_topic }}"
+      flush.timeout.ms: 20000
+      batch.size: 5000
+      max.buffered.records: 20000
+      tasks.max: 12
+      schema.ignore: "true"
+      connection.url: "http://{{ hostvars[groups['elastic_master_node'][0]].net_internal_ip }}:{{ elasticsearch_http_port }}"
+      key.ignore: "true"
+      topic.index.map: "{{ item.kafka_topic }}:{{ item.es_index }}"
+      type.name: "kafka-data"
+  with_items: "{{ kafka_connect_topic_index_map }}"
+  loop_control:
+    pause: 10
+  when: "{{ kafka_connect_update_connectors|default(false)|bool }}"
+

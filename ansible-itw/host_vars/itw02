@@ -1,0 +1,10 @@
+---
+zookeeper_id: 2
+kafka_broker_id: 2
+elastic_nodename: node2
+
+net_internal_ip: 10.244.223.223
+hostname: epamh2
+
+elastic_heap_size: 3g
+elastic_zone: "{{ elastic_zones[0] }}"

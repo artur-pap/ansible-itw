@@ -1,0 +1,27 @@
+---
+- name: Install tools
+  yum:  name={{ item }}
+        state=installed
+  with_items:
+    - libselinux-python
+    - libsemanage-python
+    - policycoreutils-python
+    - epel-release
+    - nc
+    - net-tools
+    - vim-enhanced
+    - python-pip
+    - telnet
+    - ipmitool
+    - tuned
+    - psmisc
+    - nano
+    - tmux
+
+- name: pip packages
+  pip: name={{ item.name }} version={{ item.version }} state=present
+  with_items:
+    - name: docker-py
+      version: 1.8.1
+    - name: passlib
+      version: 1.6.5

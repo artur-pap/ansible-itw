@@ -1,0 +1,25 @@
+zookeeper.connect={{ zookeeper_hosts }}/kafka
+broker.id={{ kafka_broker_id }}
+zookeeper.connection.timeout.ms=100000
+auto.leader.rebalance.enable=true
+advertised.host.name={{ net_internal_ip }}
+log.dirs=
+{%- for item in kafka_data_dirs -%}
+/data/{{ item.ix }}{% if not loop.last %},{% endif %}
+{%- endfor %}
+
+# TODO: think about it
+auto.create.topics.enable=true
+default.replication.factor={{ kafka_replication_factor }}
+delete.topic.enable=true
+
+port={{ kafka_port }}
+
+num.partitions=5
+log.retention.hours=168
+
+zookeeper.connection.timeout.ms=100000
+zookeeper.session.timeout.ms=10000
+
+controlled.shutdown.enable=true
+group.max.session.timeout.ms=300000

@@ -1,0 +1,36 @@
+logrotate_scripts:
+  - name: syslog
+    path: 
+      - "/var/log/syslog"
+      - "/var/log/cron"
+      - "/var/log/maillog"
+      - "/var/log/secure"
+      - "/var/log/spooler"
+      - "/var/log/messages"
+    options:
+      - daily
+      - rotate 7
+      - missingok
+      - compress
+      - delaycompress
+    scripts:
+      postrotate: "/bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true"
+  - name: elasticsearch
+    path: 
+      - "/var/log/omelasticsearch.log"
+    options:
+      - daily
+      - rotate 2
+      - missingok
+      - compress
+      - delaycompress
+    scripts:
+      postrotate: "/bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true"
+  - name: es-alias-rotate
+    path: 
+      - "/var/log/rotate_alias.log"
+    options:
+      - daily
+      - rotate 7
+      - missingok
+

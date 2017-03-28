@@ -1,0 +1,69 @@
+---
+- name: set facts for zookeeper
+  set_fact:
+    zookeeper_host_dir: /srv/services/zookeeper
+
+- name: create zookeeper directories
+  file: path="{{ item }}" state=directory
+  with_items:
+    - "{{ zookeeper_host_dir }}"
+    - "{{ zookeeper_conf_dir }}"
+    - "{{ zookeeper_data_dir }}"
+    - "{{ zookeeper_datalog_dir }}"
+    - "{{ zookeeper_log_dir }}"
+
+- name: create a symbolic link for zookeeper conf directory
+  file: src="{{ zookeeper_conf_dir }}" dest="{{ zookeeper_host_dir }}/conf" state=link
+
+- name: create a symbolic link for zookeeper data directory
+  file: src="{{ zookeeper_data_dir }}" dest="{{ zookeeper_host_dir }}/data" state=link
+
+- name: create a symbolic link for zookeeper datalog directory
+  file: src="{{ zookeeper_datalog_dir }}" dest="{{ zookeeper_host_dir }}/datalog" state=link
+
+- name: create a symbolic link for zookeeper log directory
+  file: src="{{ zookeeper_log_dir }}" dest="{{ zookeeper_host_dir }}/log" state=link
+
+- name: copy configuration
+  template: src={{ item }}.j2 dest="{{ zookeeper_host_dir }}/conf/{{ item }}" force=yes
+  with_items:
+    - zoo.cfg
+    - log4j.properties
+  notify: restart zookeeper
+
+- name: copy myid
+  template: src=myid.j2 dest="{{ zookeeper_host_dir }}/data/myid" force=yes
+  notify: restart zookeeper
+
+# Ansible will not trigger a restart of the Docker container on changing the environment variable
+#  JMX_PORT. To work around we'll write the value of the variable to a file and trigger the
+#  restart based on that
+- name: set jmx port
+  template: src=templates/jmxport.txt.j2 dest="{{ zookeeper_host_dir }}/conf/jmxport.txt"
+  notify: restart zookeeper
+
+- meta: flush_handlers
+
+- name: add container to whitelist
+  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'zookeeper' ]"
+  tags: always
+
+- name: start the zookeeper container
+  docker_container:
+    name: zookeeper
+    state: started
+    restart_policy: unless-stopped
+    image: zookeeper:3.4.9
+    recreate: "{{ zookeeper_restart_docker | default('no') }}"
+    network_mode: host
+    log_driver: json-file
+    env:
+      JVMFLAGS: -Xmx512m
+      JMXDISABLE: "false"
+      JMXPORT: "{{ zookeeper_jmx_port }}"
+      JMXLOCALONLY: "true"
+    volumes:
+      - "{{ zookeeper_host_dir }}/conf:/conf"
+      - "{{ zookeeper_host_dir }}/data:/data"
+      - "{{ zookeeper_host_dir }}/datalog:/datalog"
+      - "{{ zookeeper_host_dir }}/log:/log"

@@ -1,0 +1,29 @@
+---
+- name: set kafka_hosts
+  set_fact:
+    kafka_hosts: "{% for host in groups['kafka'] %}{{ hostvars[host].net_internal_ip }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+  when:
+    - groups['kafka'] is defined
+    - groups['kafka']|length > 0
+
+- name: set zookeeper_hosts
+  set_fact:
+    zookeeper_hosts: "{% for host in groups['zookeeper'] %}{{ hostvars[host].net_internal_ip }}:{{ zookeeper_client_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+  when:
+    - groups['zookeeper'] is defined
+    - groups['zookeeper']|length > 0
+
+- name: set hdfs_hosts
+  set_fact:
+    hdfs_hosts: "{{ hostvars[groups['hdfs-namenodes'][0]].net_internal_ip }}:{{ hdfs_namenode_rpc_port }}"
+  when:
+    - groups['hdfs-namenodes'] is defined
+    - groups['hdfs-namenodes']|length > 0
+
+- name: set spark_mesos_image
+  set_fact:
+    spark_mesos_image: "smartislav/spark:2.1.0"
+  when:
+    - docker_registry is defined
+    - spark_mesos_version is defined
+

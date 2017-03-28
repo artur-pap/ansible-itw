@@ -1,0 +1,23 @@
+---
+- name: set facts for spark
+  set_fact:
+    spark_host_dir: /srv/services/spark
+
+- name: create directories for spark
+  file: path="{{ item }}" state=directory
+  with_items:
+    - "{{ spark_host_dir }}"
+    - "{{ spark_conf_dir }}"
+
+- name: link spark configuration directory
+  file: src="{{ spark_conf_dir }}" dest="{{ spark_host_dir }}/conf" state=link force=yes
+
+- name: copy configuration
+  template: src={{ item }}.j2 dest="{{ spark_host_dir }}/conf/{{ item }}"
+  with_items:
+    - spark-defaults.conf
+    - spark-env.sh
+    - log4j.properties
+    - metrics.properties
+    - hosts
+  notify: restart spark apps

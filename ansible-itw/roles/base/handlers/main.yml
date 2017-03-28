@@ -1,0 +1,21 @@
+---
+- name: restart ntp
+  service: name=ntp state=restarted
+
+- name: refresh sysfs
+  service: name=sysfsutils state=restarted
+
+- name: restart irqbalance
+  service: name=irqbalance state=restarted
+
+- name: restart cron
+  service: name=cron state=restarted
+
+- name: update grub
+  command: update-grub
+
+- name: remount
+  command: mount -a
+
+- name: restart sshd
+  service: name=sshd state=restarted
