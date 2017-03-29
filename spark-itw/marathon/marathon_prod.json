@@ -1,0 +1,44 @@
+{
+  "id": "ams-dataset-processor",
+  "cmd": "/spark/bin/spark-submit --packages com.libertyglobal.medm:spark-reports_2.11:1.0.0-SNAPSHOT --repositories http://172.26.80.32:8081/artifactory/jcenter,http://172.26.80.32:8081/artifactory/libs-snapshot-local,http://172.26.80.32:8081/artifactory/ext-snapshot-local --conf spark.streaming.kafka.consumer.poll.ms=1024 --master mesos://zk://172.26.80.32:2181,172.26.80.34:2181,172.26.80.35:2181,172.26.80.36:2181,172.26.80.38:2181/mesos --class com.libertyglobal.medm.dashboards.datasets.AMSDataSetProcessor --driver-memory 1g --conf spark.executor.userClassPathFirst=true --conf spark.executor.memory=1g --conf spark.executor.cores=1 --conf spark.cores.max=3 /spark/examples/jars/spark-examples_2.11-2.1.0.jar",
+  "cpus": 1,
+  "mem": 1024,
+  "disk": 0,
+  "instances": 1,
+  "container": {
+    "type": "DOCKER",
+    "volumes": [
+      {
+        "containerPath": "/hadoop/conf",
+        "hostPath": "/srv/services/hadoop/conf",
+        "mode": "RO"
+      },
+      {
+        "containerPath": "/spark/conf",
+        "hostPath": "/srv/services/spark/conf",
+        "mode": "RO"
+      },
+      {
+        "containerPath": "/etc/hosts",
+        "hostPath": "/srv/services/spark/conf/hosts",
+        "mode": "RO"
+      }
+    ],
+    "docker": {
+      "image": "smartislav/spark:2.1.0",
+      "network": "HOST",
+      "portMappings": null,
+      "privileged": true,
+      "parameters": [],
+      "forcePullImage": false
+    }
+  },
+  "env": {
+    "AMS_DATASET_PROCESSOR_KAFKA_SERVERS": "172.26.80.32:9092,172.26.80.34:9092,172.26.80.35:9092,172.26.80.36:9092,172.26.80.38:9092",
+    "AMS_DATASET_PROCESSOR_BATCH_DURATION": "10",
+    "AMS_DATASET_PROCESSOR_INPUT_TOPIC": "in-hrzdtv-ams-raw",
+    "AMS_DATASET_PROCESSOR_OUTPUT_TOPIC": "out-hrzdtv-ams-raw"
+  },
+  "labels": {},
+  "healthChecks": []
+}

@@ -1,0 +1,8 @@
+{
+  "@timestamp": "2017-02-02T15:28:13.461Z",
+  "country": "NL",
+  "source": "log",
+  "message": "2017/02/01 16:27:00.563 Some Messsage",
+  "offset": 6919830,
+  "type": "input-topic-1"
+}

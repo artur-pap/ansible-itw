@@ -1,0 +1,49 @@
+{
+  "id": "kafka-processor-1",
+  "cmd": "/spark/bin/spark-submit --packages com.epam.itw.spark:spark-reports_2.11:1.0.0-SNAPSHOT --repositories http://127.0.0.1:8081/artifactory/jcenter,http://127.0.0.1:8081/artifactory/libs-snapshot-local,http://127.0.0.1:8081/artifactory/ext-snapshot-local --conf spark.streaming.kafka.consumer.poll.ms=1024 --master mesos://zk://172.26.80.39:2181/mesos --class com.epam.itw.spark.KafkaProcessor --driver-memory 1g --conf spark.executor.userClassPathFirst=true --conf spark.executor.memory=1g --conf spark.executor.cores=1 --conf spark.cores.max=1 /spark/examples/jars/spark-examples_2.11-2.1.0.jar",
+  "cpus": 1,
+  "mem": 1024,
+  "disk": 0,
+  "instances": 1,
+  "container": {
+    "type": "DOCKER",
+    "volumes": [
+      {
+        "containerPath": "/root/.ivy2/cache",
+        "hostPath": "/srv/services/spark/.ivy2/cache",
+        "mode": "RW"
+      },
+      {
+        "containerPath": "/hadoop/conf",
+        "hostPath": "/srv/services/hadoop/conf",
+        "mode": "RO"
+      },
+      {
+        "containerPath": "/spark/conf",
+        "hostPath": "/srv/services/spark/conf",
+        "mode": "RO"
+      },
+      {
+        "containerPath": "/etc/hosts",
+        "hostPath": "/srv/services/spark/conf/hosts",
+        "mode": "RO"
+      }
+    ],
+    "docker": {
+      "image": "smartislav/spark:2.1.0",
+      "network": "HOST",
+      "portMappings": null,
+      "privileged": true,
+      "parameters": [],
+      "forcePullImage": false
+    }
+  },
+  "env": {
+    "PROCESSOR_KAFKA_SERVERS": "127.0.0.1:9092",
+    "PROCESSOR_BATCH_DURATION": "10",
+    "PROCESSOR_INPUT_TOPIC": "input-topic-name",
+    "PROCESSOR_OUTPUT_TOPIC": "output-topic-name"
+  },
+  "labels": {},
+  "healthChecks": []
+}
