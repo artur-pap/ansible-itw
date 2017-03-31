@@ -1,0 +1,9 @@
+---
+zookeeper_id: 4
+kafka_broker_id: 4
+elastic_nodename: node4
+
+net_internal_ip: 10.6.193.39
+hostname: ecsc003003d4
+
+elastic_heap_size: 512m

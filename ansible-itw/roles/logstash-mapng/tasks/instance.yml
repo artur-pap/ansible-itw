@@ -1,0 +1,31 @@
+---
+- name: set facts for logstash
+  set_fact: logstash_mapng_host_dir=/srv/services/logstash-mapng
+
+- name: set logstash instance name
+  set_fact: 
+    logstash_instance_name: "logstash-mapng-{{ item }}"
+
+- name: copy configuration
+  template: src={{ item }}.conf.j2 dest="{{ logstash_mapng_host_dir }}/conf/{{ item }}.conf"
+  notify: restart logstash-mapng
+
+- meta: flush_handlers
+
+- name: add container to whitelist
+  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'logstash-mapng' ]"
+  tags: always
+
+- name: start logstash-mapng
+  docker_container:
+    name: "{{ logstash_instance_name }}"
+    state: started
+    restart_policy: unless-stopped
+    image: logstash:5.2.1
+    recreate: "{{ logstash_mapng_restart_docker|default('no') }}"
+    network_mode: host
+    log_driver: json-file
+    volumes: 
+      - "{{ logstash_mapng_host_dir }}/conf:/logstash"
+    command: "logstash -f /logstash/{{item}}.conf"
+

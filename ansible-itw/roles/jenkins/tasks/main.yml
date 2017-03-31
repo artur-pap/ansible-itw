@@ -15,10 +15,6 @@
 - name: create a symbolic link for jenkins tmp directory
   file: src="{{ jenkins_tmp_dir }}" dest="{{ jenkins_host_dir }}/tmp" state=link
 
-- name: add container to whitelist
-  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'jenkins' ]"
-  tags: always
-
 - name: start jenkins
   docker_container:
     name: jenkins

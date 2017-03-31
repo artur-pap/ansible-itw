@@ -8,18 +8,19 @@ itw-staging
 itw-staging
 
 [itw-staging]
-itw01 ansible_host=172.26.117.20
-itw02 ansible_host=172.26.117.25
-itw03 ansible_host=172.26.117.26
+itw01 ansible_host=10.8.211.9
+itw02 ansible_host=10.8.210.41
+itw03 ansible_host=10.8.211.30
+epc01 ansible_host=10.8.211.30
 
 [all-servers:children]
 itw-staging
 
 [external-services]
-ecsc003003b5 ansible_host=172.26.117.27
+epc01 ansible_host=10.6.193.39
 
 [admin-tasks]
-odhpoc01
+epc01
 
 [zookeeper]
 itw01

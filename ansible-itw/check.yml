@@ -1,5 +1,5 @@
 ---
- - name: ansible version check
+- name: ansible version check
   hosts: localhost
   tags: always
   tasks:

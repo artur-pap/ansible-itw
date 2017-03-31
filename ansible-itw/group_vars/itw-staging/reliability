@@ -1,7 +1,3 @@
 ---
 mesos_quorum: 3
 kafka_replication_factor: 3
-
-elastic_zones:
-  - hot
-  - cold

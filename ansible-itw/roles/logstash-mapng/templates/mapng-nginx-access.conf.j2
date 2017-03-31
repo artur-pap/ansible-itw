@@ -1,0 +1,43 @@
+# Input section.
+input { 
+  kafka {
+    bootstrap_servers => "{{ kafka_hosts }}"
+    topics => ["nginx-access"]
+    group_id => "logstash-mapng-access"
+    type => "mapng-nginx-access"
+  }
+}
+
+# Filter section
+filter {
+  if [type] == "mapng-nginx-access" {
+    # Convert the Kafka topic contents to a JSON object
+    json {
+      source => "message"
+    }
+
+    # Extract fields
+    grok {
+      match => { "message" => '%{IPORHOST:remote_addr} \[%{HTTPDATE}\] \[(?<timestamp_mili>[0-9]+\.[0-9]+)\]\"%{NOTSPACE:request} %{URIPATHPARAM:uri} HTTP/%{NUMBER:httpversion}\" %{INT:status} (?<request_time>\d+\.\d+|-) (?<camel_id>[a-zA-Z0-9\-]+) \[(?<cpe_id>.+)\] (?<cache_status>[A-Z]+|-) \[(?<upstream_addr>.+)\] %{INT:con_active} %{INT:con_reading} %{INT:con_writing} %{INT:con_waiting}' }
+    }
+    mutate {
+      gsub => [ "timestamp_mili", "\.", "" ]
+      gsub => [ "request_time", "-", "" ]
+      replace => { "type" => "mapng-nginx-access" }
+    }
+  }  # End if
+} # End filter
+
+# Output section
+output {
+  # TODO: Selector for right type
+  if [type] == "mapng-nginx-access" {
+    # stdout { codec => rubydebug }
+    kafka {
+      codec => "json"
+      bootstrap_servers => "{{ kafka_hosts }}"
+      topic_id => "out.hrzdtv.mapng.nginx.logstash.raw"
+    }
+  }
+}
+

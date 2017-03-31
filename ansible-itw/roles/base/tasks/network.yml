@@ -9,6 +9,10 @@
   when: net_external_routes is defined
   tags: network
 
+- name: print all hosts 777
+  debug:
+    msg: "all hosts {{ groups['all'] }}"
+
 - name: update /etc/hosts
   template: src=hosts.j2 dest=/etc/hosts
 

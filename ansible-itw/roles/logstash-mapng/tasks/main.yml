@@ -1,0 +1,23 @@
+---
+- name: set facts for logstash
+  set_fact: logstash_mapng_host_dir=/srv/services/logstash-mapng
+
+- name: create directories for logstash
+  file: path="{{ item }}" state=directory
+  with_items:
+    - "{{ logstash_mapng_host_dir }}"
+    - "{{ logstash_mapng_conf_dir }}"
+
+- name: create a symbolic link for conf directory of logstash-mapng
+  file: src="{{ logstash_mapng_conf_dir }}" dest="{{ logstash_mapng_host_dir }}/conf" state=link
+
+- name: remove old mapng config
+  file: path="{{ logstash_mapng_host_dir }}/conf/mapng.conf" state=absent
+
+- include: instance.yml
+  with_items:
+    - mapng-nginx-access
+    - mapng-nginx-error
+    - mapng-fuse-error
+  loop_var: outer_item
+

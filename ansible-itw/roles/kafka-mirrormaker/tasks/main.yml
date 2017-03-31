@@ -1,0 +1,5 @@
+---
+- include: instance.yml
+  with_items: "{{ kafka_mirrormaker_sources|default([]) }}"
+  loop_control:
+    loop_var: kafka_mirrormaker_source

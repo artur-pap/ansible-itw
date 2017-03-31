@@ -1,4 +1,2 @@
 ---
 spark_mesos_version: 0.64
-statsd_version: 1.0
-

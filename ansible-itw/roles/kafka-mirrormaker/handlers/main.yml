@@ -1,0 +1,3 @@
+---
+- name: restart kafka-mirrormaker
+  set_fact: kafka_mirrormaker_restart_docker=yes

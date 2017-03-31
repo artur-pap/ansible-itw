@@ -1,0 +1,7 @@
+bootstrap.servers={{ kafka_mirrormaker_source.brokers }}
+group.id=mirrormaker-odhpoc-odhdev1
+auto.offset.reset=earliest
+client.id={{ inventory_hostname }}
+
+partition.assignment.strategy=org.apache.kafka.clients.consumer.RoundRobinAssignor
+request.timeout.ms=30000

@@ -1,6 +1,0 @@
----
-
-ssh_users:
-  - name:       "ansible-user"
-    comment:    "Ansible User"
-    uid:        24375

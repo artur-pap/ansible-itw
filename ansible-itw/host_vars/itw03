@@ -3,8 +3,7 @@ zookeeper_id: 3
 kafka_broker_id: 3
 elastic_nodename: node3
 
-net_internal_ip: 10.244.223.224
-hostname: epamh3
+net_internal_ip: 10.8.211.30
+hostname: itw3
 
-elastic_heap_size: 3g
-elastic_zone: "{{ elastic_zones[0] }}"
+elastic_heap_size: 512m

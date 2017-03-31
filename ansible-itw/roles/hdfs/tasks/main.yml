@@ -97,10 +97,6 @@
     - "'hdfs-namenodes' in group_names"
     - "not hdfs_namenode_host_dir_stat.stat.exists"
 
-- name: add container to whitelist
-  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'hdfs-namenode' ]"
-  tags: always
-
 - name: start an hdfs-namenode container
   docker_container:
     name: hdfs-namenode
@@ -123,10 +119,6 @@
 
 - name: make a list of hdfs-datanode volumes
   set_fact: hdfs_datanode_volumes_list="{{ hdfs_datanode_volumes_list_result.results | map(attribute='ansible_facts.entry') | list }}"
-
-- name: add container to whitelist
-  set_fact: docker_containers_whitelist="{{ docker_containers_whitelist }} + [ 'hdfs-datanode' ]"
-  tags: always
 
 - name: start an hdfs-datanode container
   vars:

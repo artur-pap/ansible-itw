@@ -1,0 +1,55 @@
+# Input section.
+input { 
+  kafka {
+    bootstrap_servers => "{{ kafka_hosts }}"
+    topics => ["nginx-error"]
+    group_id => "logstash-mapng-nginx-error2"
+    type => "mapng-nginx-error"
+  }
+}
+
+# Filter section
+filter {
+  if [type] == "mapng-nginx-error" {
+    # Convert the Kafka topic contents to a JSON object
+    json {
+      source => "message"
+    }
+
+    if [message] =~ "referrer:" {
+      grok {
+        match => { "message" => '(?<timestamp>%{YEAR}[./]%{MONTHNUM}[./]%{MONTHDAY} %{TIME}) \[%{LOGLEVEL:severity}\] %{POSINT:pid}#%{NUMBER}: %{GREEDYDATA:errormessage},\ client: %{IP:client}, server: , request: \"%{GREEDYDATA:request}\", upstream: \"%{GREEDYDATA:upstream}\", host: \"%{GREEDYDATA:host}\", referrer: \"%{GREEDYDATA:referrer}\"' }
+      }
+    } else if [message] =~ "host:"{
+      grok {
+        match => { "message" => '(?<timestamp>%{YEAR}[./]%{MONTHNUM}[./]%{MONTHDAY} %{TIME}) \[%{LOGLEVEL:severity}\] %{POSINT:pid}#%{NUMBER}: %{GREEDYDATA:errormessage},\ client: %{IP:client}, server: , request: \"%{GREEDYDATA:request}\", upstream: \"%{GREEDYDATA:upstream}\", host: \"%{GREEDYDATA:host}\"' }
+        }                
+    } else if [message] =~ "upstream:" {
+      grok {
+        match => { "message" => '(?<timestamp>%{YEAR}[./]%{MONTHNUM}[./]%{MONTHDAY} %{TIME}) \[%{LOGLEVEL:severity}\] %{POSINT:pid}#%{NUMBER}: %{GREEDYDATA:errormessage},\ client: %{IP:client}, server: , request: \"%{GREEDYDATA:request}\", upstream: \"%{GREEDYDATA:upstream}\"' }
+      }                
+    } else {
+      grok {
+        match => { "message" => '(?<timestamp>%{YEAR}[./]%{MONTHNUM}[./]%{MONTHDAY} %{TIME}) \[%{LOGLEVEL:severity}\] %{POSINT:pid}#%{NUMBER}: %{GREEDYDATA:errormessage},\ client: %{IP:client}, server: , request: \"%{GREEDYDATA:request}\"' }
+      }                
+    }                  
+
+    mutate {
+      replace => { "type" => "mapng-nginx-error" }
+    }
+             
+  }  # End if
+} # End filter
+
+# Output section
+output {
+  if [type] == "mapng-nginx-error"{
+#    stdout { codec => rubydebug }
+    kafka {
+      codec => "json"
+      bootstrap_servers => "{{ kafka_hosts }}"
+      topic_id => "out_hrzdtv_mapng_nginx_error_logstash_raw"
+    }
+  }
+}
+

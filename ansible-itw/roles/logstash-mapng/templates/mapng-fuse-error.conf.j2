@@ -1,0 +1,43 @@
+# Input section
+input { 
+  kafka {
+    bootstrap_servers => "{{ kafka_hosts }}"
+    topics => ["fuse-error"]
+    group_id => "logstash-mapng-fuse-error"
+    type => "mapng-fuse-error"
+  }
+}
+
+# Filter section
+filter {
+  if [type] == "mapng-fuse-error" {
+    # Convert the Kafka topic contents to a JSON object
+    json {
+      source => "message"
+    }
+
+    grok {
+      match => { "message" => "%{TIMESTAMP_ISO8601:logdate}%{SPACE}\|%{SPACE}%{LOGLEVEL:level}%{SPACE}\|%{SPACE}%{DATA:thread}%{SPACE}\|%{SPACE}%{DATA:category}%{SPACE}\|%{SPACE}%{DATA:bundle}%{SPACE}\|%{SPACE}%{GREEDYDATA:messagetext}" }
+    }
+    date {
+      match => ["logdate", "yyyy-MM-dd HH:mm:ss,SSS"]
+    }
+
+    mutate {
+      replace => { "type" => "mapng-fuse-error" }
+    }
+             
+  }  # End if
+} # End filter
+
+# Output section
+output {
+  if [type] == "mapng-fuse-error"{
+    kafka {
+      codec => "json"
+      bootstrap_servers => "{{ kafka_hosts }}"
+      topic_id => "out_hrzdtv_mapng_fuse_error_logstash_raw"
+    }
+  }
+}
+

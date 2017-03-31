@@ -1,3 +1,0 @@
----
-- name: restart kafka-ingester
-  set_fact: kafka_ingester_restart_docker=yes

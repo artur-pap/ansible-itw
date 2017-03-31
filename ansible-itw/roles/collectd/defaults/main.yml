@@ -1,7 +1,0 @@
----
-
-collect_interval: 15
-report_by_cpu: false
-graphite_port: 2003
-graphite_prefix: "collectd."
-

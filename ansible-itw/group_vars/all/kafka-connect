@@ -1,6 +1,0 @@
----
-kafka_connect_topic_index_map:
-  - kafka_topic: out.hrzdtv.sgw.raw
-    es_index: out-hrzdtv-sgw-raw
-  - kafka_topic: out.hrzdtv.cmdc.raw
-    es_index: out-hrzdtv-cmdc-raw
