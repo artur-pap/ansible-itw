@@ -1,17 +1,26 @@
 ---
-- name: Disable gateway when net_external_disable_gateway is defined
-  lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-{{ net_external_iface }} regexp='^(GATEWAY.*)' line='#\1' backrefs=yes
-  when: net_external_disable_gateway is defined and net_external_disable_gateway
-  tags: network
-
-- name: Set external routes when net_external_routes is defined
-  copy: dest=/etc/sysconfig/network-scripts/route-{{ net_external_iface }} content='{{ net_external_routes|join("\n")}}'
-  when: net_external_routes is defined
-  tags: network
+#- name: Disable gateway when net_external_disable_gateway is defined
+#  lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-{{ net_external_iface }} regexp='^(GATEWAY.*)' line='#\1' backrefs=yes
+#  when: net_external_disable_gateway is defined and net_external_disable_gateway
+#  tags: network
+#
+#- name: Set external routes when net_external_routes is defined
+#  copy: dest=/etc/sysconfig/network-scripts/route-{{ net_external_iface }} content='{{ net_external_routes|join("\n")}}'
+#  when: net_external_routes is defined
+#  tags: network
 
 - name: print all hosts 777
   debug:
-    msg: "all hosts {{ groups['all'] }}"
+    msg: "all hosts {{ groups['all'][0] }}"
+
+- name: print groups all
+  debug:
+    msg: "{{ groups['all'] }}"
+
+- name: print all itw01
+  debug:
+    msg: "{{ hostvars['itw01'].net_internal_ip }}"
+
 
 - name: update /etc/hosts
   template: src=hosts.j2 dest=/etc/hosts

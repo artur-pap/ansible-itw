@@ -4,8 +4,8 @@
 - hosts: all-servers
   strategy: free
   roles:
-    - name: yum
-      tags: base
+#    - name: yum
+#      tags: base
     - name: base
       tags: base
     - name: ntpd
@@ -13,58 +13,58 @@
     - name: docker
       tags: [base, docker]
 
-#- hosts: docker-registry
-#  roles:
-#    - name: docker-proxy
-#      tags: [docker-proxy, docker]
-#
-#- hosts: docker-registry
-#  roles:
-#    - name: docker-registry
-#      tags: [docker-registry, docker]
-#
-## ES Master nodes
-#- hosts: elastic_master_node
-#  roles:
-#    - name: elasticsearch
-#      vars:
-#        - is_master: true
-#        - is_data: false
-#        - nodecount: 1
-#      tags: [elasticsearch,es-master-node]
-#
-## ES Data nodes
-#- hosts: elastic_data_node
-#  roles:
-#    - name: elasticsearch
-#      vars:
-#        - is_master: false
-#        - is_data: true
-#        - nodecount: 4
-#      tags: [elasticsearch,es-data-node]
-#
-## ES Client nodes
-#- hosts: elastic_client_node
-#  roles:
-#    - name: elasticsearch
-#      vars:
-#        - is_master: false
-#        - is_data: false
-#        - nodecount: 1
-#      tags: [elasticsearch,es-client-node]
-#
-#- hosts: zookeeper
-#  serial: 1
-#  roles:
-#    - name: zookeeper
-#      tags: zookeeper
-#
-#- hosts: kafka
-#  serial: 1
-#  roles:
-#    - name: kafka
-#      tags: kafka
-#
+- hosts: docker-registry
+  roles:
+    - name: docker-proxy
+      tags: [docker-proxy, docker]
+
+- hosts: docker-registry
+  roles:
+    - name: docker-registry
+      tags: [docker-registry, docker]
+
+- hosts: zookeeper
+  serial: 1
+  roles:
+    - name: zookeeper
+      tags: zookeeper
+
+- hosts: kafka
+  serial: 1
+  roles:
+    - name: kafka
+      tags: kafka
+
+# ES Master nodes
+- hosts: elastic_master_node
+  roles:
+    - name: elasticsearch
+      vars:
+        - is_master: true
+        - is_data: false
+        - nodecount: 1
+      tags: [elasticsearch,es-master-node]
+
+# ES Data nodes
+- hosts: elastic_data_node
+  roles:
+    - name: elasticsearch
+      vars:
+        - is_master: false
+        - is_data: true
+        - nodecount: 1
+      tags: [elasticsearch,es-data-node]
+
+# ES Client nodes
+- hosts: elastic_client_node
+  roles:
+    - name: elasticsearch
+      vars:
+        - is_master: false
+        - is_data: false
+        - nodecount: 1
+      tags: [elasticsearch,es-client-node]
+
 #- hosts: kafka
 #  serial: 1
 #  roles:
@@ -81,69 +81,69 @@
 #  roles:
 #    - name: kafka-connect-config
 #      tags: kafka-connect-config
-#
-#- hosts: all-servers
-#  serial: 1
-#  roles:
-#    - name: hdfs
-#      tags: hdfs
-#
-#- hosts: kibana
-#  serial: 1
-#  roles:
-#    - name: kibana
-#      tags: kibana
-#
-#- hosts: all-servers
-#  strategy: free
-#  roles:
-#    - name: spark
-#      tags: spark
-#
-#- hosts: mesos-master
-#  serial: 1
-#  strategy: free
-#  roles:
-#    - name: mesos-master
-#      tags:
-#        - mesos
-#        - mesos-master
-#
-#- hosts: mesos-slave
-#  serial: 1
-#  strategy: free
-#  roles:
-#    - name: mesos-slave
-#      tags:
-#        - mesos
-#        - mesos-slave
-#
-#- hosts: marathon
-#  serial: 1
-#  roles:
-#    - name: marathon
-#      tags:
-#        - marathon
-#
+
+- hosts: all-servers:!external-services
+  serial: 1
+  roles:
+    - name: hdfs
+      tags: hdfs
+
+- hosts: kibana
+  serial: 1
+  roles:
+    - name: kibana
+      tags: kibana
+
+- hosts: all-servers:!external-services
+  strategy: free
+  roles:
+    - name: spark
+      tags: spark
+
+- hosts: mesos-master
+  serial: 1
+  strategy: free
+  roles:
+    - name: mesos-master
+      tags:
+        - mesos
+        - mesos-master
+
+- hosts: mesos-slave
+  serial: 1
+  strategy: free
+  roles:
+    - name: mesos-slave
+      tags:
+        - mesos
+        - mesos-slave
+
+- hosts: marathon
+  serial: 1
+  roles:
+    - name: marathon
+      tags:
+        - marathon
+
 #- hosts: logstash
 #  serial: 1
 #  roles:
 #    - name: logstash
 #      tags: logstash
-#
+
 #- hosts: logstash-mapng
 #  serial: 1
 #  roles:
 #    - name: logstash-mapng
 #      tags: logstash-mapng
-#
-#- hosts: jenkins
-#  roles:
-#    - name: jenkins
-#      tags: jenkins
-#
-#- hosts: artifactory
-#  serial: 1
-#  roles:
-#    - name: artifactory
-#      tags: artifactory
+
+- hosts: jenkins
+  roles:
+    - name: jenkins
+      tags: jenkins
+
+- hosts: artifactory
+  serial: 1
+  roles:
+    - name: artifactory
+      tags: artifactory

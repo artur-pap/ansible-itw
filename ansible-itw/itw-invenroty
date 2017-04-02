@@ -1,20 +1,17 @@
 [itw:children]
-itw-cluster
-
-[itw-cluster:children]
-itw-staging
+itw-dev
 
 [centos7:children]
-itw-staging
+itw-dev
 
-[itw-staging]
+[itw-dev]
 itw01 ansible_host=10.8.211.9
 itw02 ansible_host=10.8.210.41
 itw03 ansible_host=10.8.211.30
 epc01 ansible_host=10.8.211.30
 
 [all-servers:children]
-itw-staging
+itw-dev
 
 [external-services]
 epc01 ansible_host=10.6.193.39
@@ -40,7 +37,7 @@ itw03
 [mesos-slave:children]
 all-servers
 
-[docker-registry]
+[docker-registry:children]
 external-services
 
 [logstash:children]
@@ -51,13 +48,9 @@ kafka
 
 [elastic_master_node]
 itw01
-itw02
-itw03
 
 [elastic_data_node]
-itw01
 itw02
-itw03
 
 [elastic_client_node]
 itw03
@@ -75,10 +68,10 @@ itw01
 itw02
 itw03
 
-[artifactory]
+[artifactoryc:children]
 external-services
 
-[jenkins]
+[jenkins:children]
 external-services
 
 [hdfs-datanodes:children]

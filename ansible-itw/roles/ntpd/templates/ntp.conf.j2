@@ -2,10 +2,8 @@ driftfile /var/lib/ntp/drift
 
 restrict default nomodify notrap nopeer noquery
 
-restrict 127.0.0.1 
+restrict 127.0.0.1
 restrict ::1
-
-restrict {{ net_internal_net }} mask {{ net_internal_mask }} nomodify notrap
 
 server 127.127.1.0
 fudge 127.127.1.0 stratum 14
@@ -28,7 +26,7 @@ server 3.centos.pool.ntp.org iburst
 includefile /etc/ntp/crypto/pw
 
 # Key file containing the keys and key identifiers used when operating
-# with symmetric key cryptography. 
+# with symmetric key cryptography.
 keys /etc/ntp/keys
 
 # Specify the key identifiers which are trusted.

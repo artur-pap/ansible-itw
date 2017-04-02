@@ -1,0 +1,205 @@
+---
+storage_ssds: []
+
+storage_hdds:
+  - /odh/hdd1
+  - /odh/hdd2
+  - /odh/hdd3
+  - /odh/hdd4
+
+storage_slow_hdds: []
+
+cassandra_conf_dir: "{{ storage_hdds[0] }}/data/cassandra/conf"
+
+cassandra_data_dirs:
+  - disk: "{{ storage_hdds[0] }}/data/cassandra/data/0"
+    dir: /data/cassandra/data/0
+    ix: 0
+  - disk: "{{ storage_hdds[1] }}/data/cassandra/data/1"
+    dir: /data/cassandra/data/1
+    ix: 1
+  - disk: "{{ storage_hdds[2] }}/data/cassandra/data/2"
+    dir: /data/cassandra/data/2
+    ix: 2
+  - disk: "{{ storage_hdds[3] }}/data/cassandra/data/3"
+    dir: /data/cassandra/data/3
+    ix: 3
+
+cassandra_saved_caches_dir: "{{ storage_hdds[0] }}/data/cassandra/saved_caches"
+
+cassandra_commitlog_dir: "{{ storage_hdds[0] }}/data/cassandra/commitlog"
+
+cassandra_log_dir: "{{ storage_hdds[0] }}/data/cassandra/log"
+
+elasticsearch_data_dirs:
+  - disk: "{{ storage_hdds[0] }}/data/elasticsearch/data/0"
+    dir: /data/elasticsearch/data/0
+    ix: 0
+  - disk: "{{ storage_hdds[1] }}/data/elasticsearch/data/1"
+    dir: /data/elasticsearch/data/1
+    ix: 1
+  - disk: "{{ storage_hdds[2] }}/data/elasticsearch/data/2"
+    dir: /data/elasticsearch/data/2
+    ix: 2
+  - disk: "{{ storage_hdds[3] }}/data/elasticsearch/data/3"
+    dir: /data/elasticsearch/data/3
+    ix: 3
+
+elasticsearch_data_paths: "{{ elasticsearch_data_dirs | map(attribute='dir') | join(',') }}"
+
+elasticsearch_log_dir: "{{ storage_hdds[0] }}/data/elasticsearch/log"
+
+kafka_conf_dir: "{{ storage_hdds[0] }}/data/kafka/conf"
+
+kafka_log_dir: "{{ storage_hdds[0] }}/data/kafka/log"
+
+kafka_data_dirs:
+  - ix: 0
+    dir: "{{ storage_hdds[0] }}/data/kafka/data/0"
+  - ix: 1
+    dir: "{{ storage_hdds[1] }}/data/kafka/data/1"
+
+docker_registry_old_data_dir: "{{ storage_hdds[1] }}/data/registry"
+
+docker_registry_data_dir: "{{ storage_hdds[1] }}/data/docker-registry/data"
+
+docker_registry_conf_dir: "{{ storage_hdds[1] }}/data/docker-registry/conf"
+
+docker_proxy_data_dir: "{{ storage_hdds[0] }}/data/docker-proxy/data"
+
+docker_proxy_conf_dir: "{{ storage_hdds[0] }}/data/docker-proxy/conf"
+
+kafka_http_proxy_conf_dir: "{{ storage_hdds[1] }}/data/kafka-http-proxy/conf"
+
+kafka_http_proxy_log_dir: "{{ storage_hdds[1] }}/data/kafka-http-proxy/log"
+
+zookeeper_conf_dir: "{{ storage_hdds[1] }}/data/zookeeper/conf"
+
+zookeeper_data_dir: "{{ storage_hdds[0] }}/data/zookeeper/data"
+
+zookeeper_datalog_dir: "{{ storage_hdds[0] }}/data/zookeeper/datalog"
+
+zookeeper_log_dir: "{{ storage_hdds[0] }}/data/zookeeper/log"
+
+mesos_slave_work_dir: "{{ storage_hdds[0] }}/data/mesos-slave/work"
+
+mesos_slave_tmp_dir: "{{ storage_hdds[1] }}/data/mesos-slave/tmp"
+
+mesos_slave_log_dir: "{{ storage_hdds[0] }}/data/mesos-slave/log"
+
+mesos_master_work_dir: "{{ storage_hdds[0] }}/data/mesos-master/work"
+
+mesos_master_tmp_dir: "{{ storage_hdds[1] }}/data/mesos-master/tmp"
+
+mesos_master_log_dir: "{{ storage_hdds[0] }}/data/mesos-master/log"
+
+logstash_conf_dir: "{{ storage_hdds[1] }}/data/logstash/conf"
+
+logstash_pipeline_dir: "{{ storage_hdds[1] }}/data/logstash/pipeline"
+
+logstash_tmp_dir: "{{ storage_hdds[1] }}/data/logstash/tmp"
+
+logstash_log_dir: "{{ storage_hdds[0] }}/data/logstash/log"
+
+logstash_mapng_conf_dir: "{{ storage_hdds[1] }}/data/logstash-mapng/conf"
+
+#chronos path allocations
+#chronos_conf_dir: "{{ storage_hdds[0] }}/data/chronos/conf"
+
+chronos_tmp_dir: "{{ storage_hdds[1] }}/data/chronos/tmp"
+
+chronos_log_dir: "{{ storage_hdds[0] }}/data/chronos/log"
+
+kibana_conf_dir: "{{ storage_hdds[1] }}/data/kibana/conf"
+
+kibana_tmp_dir: "{{ storage_hdds[0] }}/data/kibana/tmp"
+
+kibana_log_dir: "{{ storage_hdds[1] }}/data/kibana/log"
+
+marathon_conf_dir: "{{ storage_hdds[0] }}/data/marathon/conf"
+
+marathon_tmp_dir: "{{ storage_hdds[1] }}/data/marathon/tmp"
+
+marathon_log_dir: "{{ storage_hdds[0] }}/data/marathon/log"
+
+jenkins_data_dir: "{{ storage_hdds[0] }}/data/jenkins/data"
+
+jenkins_tmp_dir: "{{ storage_hdds[1] }}/data/jenkins/tmp"
+
+jenkins_slave_data_dir: "{{ storage_hdds[0] }}/data/jenkins-slave/data"
+
+jenkins_slave_tmp_dir: "{{ storage_hdds[1] }}/data/jenkins-slave/tmp"
+
+#elasticsearch_data_dirs: "{{ elasticsearch_volumes_map | map(attribute='dir') | join(',') }}"
+
+#elasticsearch_dirs_on_host: "{{ elasticsearch_volumes_map | map(attribute='disk') | list }}"
+
+gatling_conf_dir: "{{ storage_hdds[0] }}/data/gatling/conf"
+
+gatling_files_dir: "{{ storage_hdds[0] }}/data/gatling/files"
+
+gatling_results_dir: "{{ storage_hdds[0] }}/data/gatling/results"
+
+artifactory_data_dir: "{{ storage_hdds[1] }}/data/artifactory/data"
+
+artifactory_log_dir: "{{ storage_hdds[0] }}/data/artifactory/log"
+
+artifactory_etc_dir: "{{ storage_hdds[1] }}/data/artifactory/etc"
+
+artifactory_backup_dir: "{{ storage_hdds[1] }}/data/artifactory/backup"
+
+haproxy_conf_dir: "{{ storage_hdds[0] }}/data/haproxy/conf"
+
+flume_conf_dir: "{{ storage_hdds[0] }}/data/flume/conf"
+
+kafka_ingester_conf_dir: "{{ storage_hdds[0] }}/data/kafka-ingester/conf"
+
+kafka_ingester_log_dir: "{{ storage_hdds[1] }}/data/kafka-ingester/log"
+
+flume_log_dir: "{{ storage_hdds[0] }}/data/flume/log"
+
+jmxtrans_conf_dir: "{{ storage_hdds[0] }}/data/jmxtrans/conf"
+
+jmxtrans_log_dir: "{{ storage_hdds[1] }}/data/jmxtrans/log"
+
+es2graphite_conf_dir: "{{ storage_hdds[0] }}/data/es2graphite/conf"
+
+statsd_conf_dir: "{{ storage_hdds[0] }}/data/statsd/conf"
+
+kafka_mirrormaker_conf_dir: "{{ storage_hdds[0] }}/data/kafka-mirrormaker/conf"
+
+kafka_mirrormaker_log_dir: "{{ storage_hdds[0] }}/data/kafka-mirrormaker/log"
+
+hadoop_conf_dir: "{{ storage_hdds[0] }}/data/hadoop/conf"
+
+hdfs_datanode_data_dirs:
+  - "{{ storage_hdds[0] }}/data/hdfs-datanode/data/0"
+  - "{{ storage_hdds[1] }}/data/hdfs-datanode/data/1"
+  - "{{ storage_hdds[2] }}/data/hdfs-datanode/data/2"
+  - "{{ storage_hdds[3] }}/data/hdfs-datanode/data/3"
+
+hdfs_datanode_log_dir: "{{ storage_hdds[0] }}/data/hdfs-datanode/log"
+
+hdfs_namenode_data_dir: "{{ storage_hdds[2] }}/data/hdfs-namenode/data"
+
+hdfs_namenode_log_dir: "{{ storage_hdds[0] }}/data/hdfs-namenode/log"
+
+hdfs_namenode_format_log_dir: "{{ storage_hdds[0] }}/data/hdfs-namenode-format/log"
+
+kafka_connect_dir: "{{ storage_hdds[0] }}/data/kafka-connect"
+
+spark_conf_dir: "{{ storage_hdds[0] }}/data/spark/conf"
+
+zeppelin_conf_dir: "{{ storage_hdds[0] }}/data/zeppelin/conf"
+
+zeppelin_repo_dir: "{{ storage_hdds[0] }}/data/zeppelin/local-repo"
+
+zeppelin_notebook_dir: "{{ storage_hdds[0] }}/data/zeppelin/notebook"
+
+zeppelin_log_dir: "{{ storage_hdds[0] }}/data/zeppelin/log"
+
+apache_rp_conf_dir: "{{ storage_hdds[1] }}/data/apache-rp/conf"
+
+capacityplanning_frontend_log_dir: "{{ storage_hdds[1] }}/data/capacityplanning-frontend/log"
+capacityplanning_frontend_conf_dir: "{{ storage_hdds[1] }}/data/capacityplanning-frontend/conf"
+
