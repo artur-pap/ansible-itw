@@ -8,16 +8,15 @@ itw-dev
 itw01 ansible_host=10.8.211.9
 itw02 ansible_host=10.8.210.41
 itw03 ansible_host=10.8.211.30
-epc01 ansible_host=10.8.211.30
 
 [all-servers:children]
 itw-dev
 
 [external-services]
-epc01 ansible_host=10.6.193.39
+itw03
 
 [admin-tasks]
-epc01
+itw03
 
 [zookeeper]
 itw01
@@ -70,7 +69,7 @@ itw01
 itw02
 itw03
 
-[artifactoryc:children]
+[artifactory:children]
 external-services
 
 [jenkins:children]

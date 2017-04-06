@@ -1,9 +1,7 @@
 #  syntax: [instance].sink|source.[name].[options]=[value]
 
-*.sink.graphite.class=org.apache.spark.metrics.sink.GraphiteSink
-*.sink.graphite.host={{ net_graphite_host }}
-*.sink.graphite.port={{ net_graphite_port }}
-*.sink.graphite.prefix=spark
+#*.sink.graphite.class=org.apache.spark.metrics.sink.GraphiteSink
+#*.sink.graphite.prefix=spark
 
 master.source.jvm.class=org.apache.spark.metrics.source.JvmSource
 worker.source.jvm.class=org.apache.spark.metrics.source.JvmSource

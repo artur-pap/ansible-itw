@@ -6,10 +6,10 @@
   roles:
 #    - name: yum
 #      tags: base
-    - name: base
-      tags: base
-    - name: ntpd
-      tags: base
+#    - name: basemes
+#      tags: base
+#    - name: ntpd
+#      tags: base
     - name: docker
       tags: [base, docker]
 
@@ -22,6 +22,17 @@
   roles:
     - name: docker-registry
       tags: [docker-registry, docker]
+
+- hosts: jenkins
+  roles:
+    - name: jenkins
+      tags: jenkins
+
+- hosts: artifactory
+  serial: 1
+  roles:
+    - name: artifactory
+      tags: artifactory
 
 - hosts: zookeeper
   serial: 1
@@ -136,14 +147,3 @@
 #  roles:
 #    - name: logstash-mapng
 #      tags: logstash-mapng
-
-- hosts: jenkins
-  roles:
-    - name: jenkins
-      tags: jenkins
-
-- hosts: artifactory
-  serial: 1
-  roles:
-    - name: artifactory
-      tags: artifactory

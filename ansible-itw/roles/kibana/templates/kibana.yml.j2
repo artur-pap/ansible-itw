@@ -5,7 +5,8 @@ server.port: {{ kibana_port }}
 server.host: 0.0.0.0
 
 # The Elasticsearch instance to use for all your queries.
-elasticsearch.url: "http://127.0.0.1:{{ proxy_elasticsearch_http_port }}"
+# elasticsearch.url: "http://127.0.0.1:{{ proxy_elasticsearch_http_port }}"
+elasticsearch.url: "http://itw3:{{ elasticsearch_http_port }}"
 
 # preserve_elasticsearch_host true will send the hostname specified in `elasticsearch`. If you set it to false,
 # then the host you use to connect to *this* Kibana instance will be sent.
@@ -80,4 +81,4 @@ bundled_plugin_ids:
  - plugins/visualize/index
 
 # Path adjustment for reverse proxy
-server.basePath: "/kibana"
+# server.basePath: "/kibana"

@@ -1,5 +1,7 @@
 ---
-net_external_iface: eth0
+#net_external_iface: eth0
+net_external_iface: enp0s3
+
 
 net_internal_net: 10.6.138.0
 net_internal_mask: 255.255.255.0

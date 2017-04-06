@@ -10,10 +10,10 @@
     - "{{ jenkins_tmp_dir }}"
 
 - name: create a symbolic link for jenkins data directory
-  file: src="{{ jenkins_data_dir }}" dest="{{ jenkins_host_dir }}/data" state=link
+  file: src="{{ jenkins_data_dir }}" dest="{{ jenkins_host_dir }}/data" state=link force=yes
 
 - name: create a symbolic link for jenkins tmp directory
-  file: src="{{ jenkins_tmp_dir }}" dest="{{ jenkins_host_dir }}/tmp" state=link
+  file: src="{{ jenkins_tmp_dir }}" dest="{{ jenkins_host_dir }}/tmp" state=link force=yes
 
 - name: start jenkins
   docker_container:

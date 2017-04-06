@@ -11,13 +11,13 @@
     - "{{ mesos_master_tmp_dir }}"
 
 - name: create a symbolic link for mesos_master work directory
-  file: src="{{ mesos_master_work_dir }}" dest="{{ mesos_master_host_dir }}/work" state=link
+  file: src="{{ mesos_master_work_dir }}" dest="{{ mesos_master_host_dir }}/work" state=link force=yes
 
 - name: create a symbolic link for mesos_master log directory
-  file: src="{{ mesos_master_log_dir }}" dest="{{ mesos_master_host_dir }}/log" state=link
+  file: src="{{ mesos_master_log_dir }}" dest="{{ mesos_master_host_dir }}/log" state=link force=yes
 
 - name: create a symbolic link for mesos_master tmp directory
-  file: src="{{ mesos_master_tmp_dir }}" dest="{{ mesos_master_host_dir }}/tmp" state=link
+  file: src="{{ mesos_master_tmp_dir }}" dest="{{ mesos_master_host_dir }}/tmp" state=link force=yes
 
 - name: ensure mesos-master container is running
   docker_container:

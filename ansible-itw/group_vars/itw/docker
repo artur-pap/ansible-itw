@@ -1,6 +1,7 @@
 ---
+insecure_registry: "{{ hostvars[groups['docker-registry'][0]].net_internal_ip }}"
+
 docker_registry: "{{ insecure_registry }}:{{ docker_registry_port }}"
 docker_registry_url: https://{{ docker_registry }}
-insecure_registry: "{{ hostvars[groups['docker-registry'][0]].net_internal_ip }}"
 docker_proxy: "{{ hostvars[groups['docker-registry'][0]].net_internal_ip }}"
 docker_registry_opts: --insecure-registry {{ insecure_registry }}:{{ docker_registry_port }} --registry-mirror http://{{ docker_proxy }}:{{ docker_proxy_port }}

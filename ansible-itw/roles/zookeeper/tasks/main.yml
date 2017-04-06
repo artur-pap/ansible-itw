@@ -4,7 +4,7 @@
     zookeeper_host_dir: /srv/services/zookeeper
 
 - name: create zookeeper directories
-  file: path="{{ item }}" state=directory
+  file: path="{{ item }}" state=directory mode=0777
   with_items:
     - "{{ zookeeper_host_dir }}"
     - "{{ zookeeper_conf_dir }}"
@@ -35,12 +35,12 @@
   template: src=myid.j2 dest="{{ zookeeper_host_dir }}/data/myid" force=yes
   notify: restart zookeeper
 
-# Ansible will not trigger a restart of the Docker container on changing the environment variable
-#  JMX_PORT. To work around we'll write the value of the variable to a file and trigger the
-#  restart based on that
-- name: set jmx port
-  template: src=templates/jmxport.txt.j2 dest="{{ zookeeper_host_dir }}/conf/jmxport.txt"
-  notify: restart zookeeper
+## Ansible will not trigger a restart of the Docker container on changing the environment variable
+##  JMX_PORT. To work around we'll write the value of the variable to a file and trigger the
+##  restart based on that
+#- name: set jmx port
+#  template: src=templates/jmxport.txt.j2 dest="{{ zookeeper_host_dir }}/conf/jmxport.txt"
+#  notify: restart zookeeper
 
 - meta: flush_handlers
 

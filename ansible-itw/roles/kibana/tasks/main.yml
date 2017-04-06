@@ -12,13 +12,13 @@
     - "{{ kibana_tmp_dir }}"
 
 - name: create a symbolic link for conf directory of kibana
-  file: src="{{ kibana_conf_dir }}" dest="{{ kibana_host_dir }}/conf" state=link
+  file: src="{{ kibana_conf_dir }}" dest="{{ kibana_host_dir }}/conf" state=link force=yes
 
 - name: create a symbolic link for tmp directory of kibana
-  file: src="{{ kibana_tmp_dir }}"  dest="{{ kibana_host_dir }}/tmp"  state=link
+  file: src="{{ kibana_tmp_dir }}"  dest="{{ kibana_host_dir }}/tmp"  state=link force=yes
 
 - name: create a symbolic link for log directory of kibana
-  file: src="{{ kibana_log_dir }}"  dest="{{ kibana_host_dir }}/log"  state=link
+  file: src="{{ kibana_log_dir }}"  dest="{{ kibana_host_dir }}/log"  state=link force=yes
 
 - name: copy configuration
   template: src=kibana.yml.j2 dest="{{ kibana_host_dir }}/conf/kibana.yml" force=yes

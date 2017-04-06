@@ -45,10 +45,12 @@
     <value>false</value>
   </property>
 
+  {% if net_internal_iface is defined %}
   <property>
     <name>dfs.client.local.interfaces</name>
     <value>{{ net_internal_iface }}</value>
   </property>
+  {% endif %}
 
   <!--
   <property>
